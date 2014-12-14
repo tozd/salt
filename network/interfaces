@@ -27,7 +27,7 @@ iface {{ iface }} inet6 static
 {%- set primary = False -%}
 {% endfor -%}
 
-{%- for ipv4 in cfg('ipv4', []) %}
+{%- for ipv4 in cfg.get('ipv4', []) %}
 {%- if ipv4['type'] == 'static' %}
 iface {{ iface }} inet static
   address {{ ipv4['address'] }}
