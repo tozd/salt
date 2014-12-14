@@ -125,3 +125,12 @@ inputrc-history:
         "\e[5~": history-search-backward
         "\e[6~": history-search-forward
     - append_if_not_found: True
+
+ntp:
+  pkg.installed
+
+ntp-service:
+  service.running:
+    - name: ntp
+    - require:
+      - pkg: ntp
