@@ -22,9 +22,8 @@ iface {{ iface }} inet6 static
 {%- if primary %}
   dns-nameservers {{ pillar['network']['dns']|join(' ') }}
 {% endif -%}
-
-{% endif -%}
 {%- set primary = False -%}
+{% endif -%}
 {% endfor -%}
 
 {%- for ipv4 in cfg.get('ipv4', []) %}
@@ -33,7 +32,10 @@ iface {{ iface }} inet static
   address {{ ipv4['address'] }}
   netmask {{ ipv4['netmask'] }}
   gateway {{ ipv4['gateway'] }}
-
+{%- if primary %}
+  dns-nameservers {{ pillar['network']['dns']|join(' ') }}
+{% endif -%}
+{%- set primary = False -%}
 {% endif -%}
 {% endfor -%}
 {% endfor -%}
