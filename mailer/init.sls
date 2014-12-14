@@ -36,4 +36,6 @@ update-exim:
 root:
   alias.present:
     - target: '{{ pillar['mailer']['root_alias']|join(',') }}'
+    - require:
+      - pkg: exim4
 {% endif %}
