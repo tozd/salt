@@ -31,3 +31,9 @@ update-exim:
       - file: /etc/mailname
     - watch_in:
       - service: exim4
+
+{% if salt['pillar.get']('mailer:root_alias', None) %}
+root:
+  alias.present:
+    - target: '{{ pillar['mailer']['root_alias']|join(',') }}'
+{% endif %}
