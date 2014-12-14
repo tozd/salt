@@ -1,0 +1,39 @@
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
+
+# Loopback interface
+auto lo
+iface lo inet loopback
+
+# External interfaces
+{%- for iface, cfg in pillar['network']['interfaces'].items() %}
+auto {{ iface }}
+{%- set primary = True -%}
+
+{%- for ipv6 in cfg['ipv6'] %}
+{%- if ipv6['type'] == 'static' %}
+iface {{ iface }} inet6 static
+  address {{ ipv6['address'] }}
+  netmask {{ ipv6['netmask'] }}
+  gateway {{ ipv6['gateway'] }}
+  autoconf 0
+{%- if primary %}
+  dns-nameservers {{ pillar['network']['dns']|join(' ') }}
+{% endif -%}
+
+{% endif -%}
+{%- set primary = False -%}
+{% endfor -%}
+
+{%- for ipv4 in cfg['ipv4'] %}
+{%- if ipv4['type'] == 'static' %}
+iface {{ iface }} inet static
+  address {{ ipv4['address'] }}
+  netmask {{ ipv4['netmask'] }}
+  gateway {{ ipv4['gateway'] }}
+
+{% endif -%}
+{% endfor -%}
+{% endfor -%}
