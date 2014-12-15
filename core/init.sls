@@ -101,6 +101,8 @@ screenrc-block:
         defobuflimit 2048
         termcapinfo xterm|xterms|xs|rxvt ti@:te@
     - append_if_not_found: True
+    - require:
+      - pkg: screen
 
 htop:
   pkg.installed
