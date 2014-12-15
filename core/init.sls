@@ -171,3 +171,6 @@ sshd-keepalive-tcp:
     - repl: TCPKeepAlive no
     - require:
       - pkg: openssh-server
+
+mosh:
+  pkg.installed
