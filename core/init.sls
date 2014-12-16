@@ -174,3 +174,13 @@ sshd-keepalive-tcp:
 
 mosh:
   pkg.installed
+
+vim:
+  pkg.installed
+
+vim-editor:
+  alternatives.set_:
+    - name: editor
+    - path: /usr/bin/vim
+    - require:
+      - pkg: vim
