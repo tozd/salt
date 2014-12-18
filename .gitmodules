@@ -1,3 +1,0 @@
-[submodule "_external/iptables"]
-	path = _external/iptables
-	url = https://github.com/tozd/salt-iptables-formula.git
