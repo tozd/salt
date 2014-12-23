@@ -65,7 +65,7 @@ docker:
 
 docker-available:
   cmd.run:
-    - name: while ! docker ps; do sleep 1; done
+    - name: while ! docker ps; do sleep 1; done >/dev/null
     - timeout: 15
     - require:
       - service: docker
