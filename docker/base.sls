@@ -12,6 +12,7 @@ lxc-docker:
 
 docker-py:
   pip.installed:
+    - reload_modules: True
     - require:
       - sls: pip
 
