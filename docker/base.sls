@@ -61,3 +61,10 @@ docker:
       - file: /srv/repositories
     - watch:
       - file: /etc/default/docker
+
+docker-available:
+  cmd.run:
+    - name: while ! docker ps; do sleep 1; done
+    - timeout: 15
+    - require:
+      - service: docker
