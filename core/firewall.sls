@@ -36,6 +36,17 @@ iptables-allow-established:
     - require:
       - pkg: iptables
 
+iptables-allow-icmp:
+  iptables.append:
+    - table: filter
+    - chain: INPUT
+    - jump: ACCEPT
+    - source: 0.0.0.0/0
+    - proto: icmp
+    - save: True
+    - require:
+      - pkg: iptables
+
 iptables-reject-policy:
   iptables.set_policy:
     - table: filter
