@@ -1,7 +1,5 @@
 exim4:
-  pkg.installed:
-    - require:
-      - sls: network
+  pkg.installed: []
   service.running:
     - watch:
       - pkg: exim4
