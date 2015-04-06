@@ -14,7 +14,7 @@ def state(_cls, _func, _id, **kwargs):
         return _cls(_id)
 
 # Setup docker containers
-for container, cfg in pillar('docker:containers').items():
+for container, cfg in pillar('docker:containers', {}).items():
     docker_image = state(
         Docker, 'pulled',
         '%s-image' % container,
