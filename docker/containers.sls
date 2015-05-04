@@ -176,11 +176,24 @@ for container, cfg in pillar('docker:containers', {}).items():
         requires.append(Docker('%s-container' % network_mode['container']))
         network_mode = 'container:%s' % network_mode['container']
 
+    capabilities_add = []
+    capabilities_drop = []
+    for capability in cfg.get('capabilities', []):
+        if isinstance(capability, dict):
+            if capability.get('drop', False):
+                capabilities_drop.append(capability['name'])
+            else:
+                capabilities_add.append(capability['name'])
+        else:
+            capabilities_add.append(capability)
+
     docker_container = state(
         Docker, 'running',
         '%s-container' % container,
         name=container,
-        cap_add=cfg.get('capabilities', []),
+        cap_add=capabilities_add,
+        cap_drop=capabilities_drop,
+        privileged=cfg.get('privileged', False),
         network_mode=network_mode,
         port_bindings=ports,
         binds=volumes,
