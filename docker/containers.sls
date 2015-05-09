@@ -46,6 +46,18 @@ for container, cfg in pillar('docker:containers', {}).items():
             }
             requires.append(volume)
 
+    # Create the required files
+    for file_path, contents in cfg.get('files', {}).items():
+        requires.append(state(
+            File, 'managed',
+            file_path,
+            contents=contents,
+            user='root',
+            group='root',
+            mode=644,
+            makedirs=True,
+        ))
+
     # Create the required volumes
     for vol_name, vol_cfg in cfg.get('volumes', {}).items():
         volumes[vol_name] = {
