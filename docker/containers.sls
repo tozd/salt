@@ -4,6 +4,7 @@ import os
 from salt.utils import pyobjects
 
 Sls = pyobjects.StateFactory('sls')
+Docker = pyobjects.StateFactory('docker')
 
 def state(_cls, _func, _id, **kwargs):
     from salt.utils import pyobjects
@@ -172,17 +173,6 @@ for container, cfg in pillar('docker:containers', {}).items():
     # Configure resource limits
     resources = cfg.get('resources', {})
 
-    requires.append(state(
-        Docker, 'installed',
-        '%s-container-installed' % container,
-        name=container,
-        hostname=container,
-        image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
-        environment=environment,
-        ports=ports,
-        mem_limit=resources.get('memory', 0),
-    ))
-
     network_mode = cfg.get('network_mode', None)
     if network_mode is not None and network_mode['type'] == 'container':
         requires.append(Docker('%s-container' % network_mode['container']))
@@ -203,12 +193,16 @@ for container, cfg in pillar('docker:containers', {}).items():
         Docker, 'running',
         '%s-container' % container,
         name=container,
+        hostname=container,
+        image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
+        environment=environment,
+        ports=ports,
+        mem_limit=resources.get('memory', 0),
         cap_add=capabilities_add,
         cap_drop=capabilities_drop,
         privileged=cfg.get('privileged', False),
         network_mode=network_mode,
-        port_bindings=ports,
-        binds=volumes,
+        volumes=volumes,
         links=links,
         require=requires,
     )
