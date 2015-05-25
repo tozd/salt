@@ -6,6 +6,20 @@ single-host-reverse-proxy-image:
     - require:
       - sls: docker.base
 
+/srv/nginx/log:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: 755
+    - makedirs: True
+
+/srv/nginx/ssl:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: 700
+    - makedirs: True
+
 single-host-reverse-proxy-container:
   docker.running:
     - name: single-host-reverse-proxy
@@ -18,9 +32,18 @@ single-host-reverse-proxy-container:
         443/tcp:
           HostIp: {{ pillar['network']['address'] }}
           HostPort: 443
+    - volumes:
+        /srv/nginx/log:
+          bind: /var/log/nginx
+        /srv/nginx/ssl:
+          bind: /ssl
+        /var/run/docker.sock:
+          bind: /var/run/docker.sock
     - restart_policy:
         Name: always
     - require:
+      - file: /srv/nginx/log
+      - file: /srv/nginx/ssl
       - docker: single-host-reverse-proxy-image
 
 iptables-single-host-reverse-proxy-policy:
