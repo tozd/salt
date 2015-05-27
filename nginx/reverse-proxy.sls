@@ -20,6 +20,13 @@ single-host-reverse-proxy-image:
     - mode: 700
     - makedirs: True
 
+/srv/nginx/sites:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: 700
+    - makedirs: True
+
 single-host-reverse-proxy-container:
   docker.running:
     - name: single-host-reverse-proxy
@@ -37,6 +44,8 @@ single-host-reverse-proxy-container:
           bind: /var/log/nginx
         /srv/nginx/ssl:
           bind: /ssl
+        /srv/nginx/sites:
+          bind: /etc/nginx/sites-volume
         /var/run/docker.sock:
           bind: /var/run/docker.sock
     - restart_policy:
@@ -44,6 +53,7 @@ single-host-reverse-proxy-container:
     - require:
       - file: /srv/nginx/log
       - file: /srv/nginx/ssl
+      - file: /srv/nginx/sites
       - docker: single-host-reverse-proxy-image
 
 iptables-single-host-reverse-proxy-policy:
