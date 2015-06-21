@@ -21,28 +21,35 @@ docker-py:
   file.directory:
     - user: root
     - group: root
-    - mode: 755
+    - mode: 700
     - makedirs: True
 
 /srv/tmp/docker:
   file.directory:
     - user: root
     - group: root
-    - mode: 755
+    - mode: 700
     - makedirs: True
 
 /srv/log:
   file.directory:
     - user: root
     - group: root
-    - mode: 755
+    - mode: 700
     - makedirs: True
 
 /srv/repositories:
   file.directory:
     - user: root
     - group: root
-    - mode: 755
+    - mode: 700
+    - makedirs: True
+
+/srv/storage:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: 700
     - makedirs: True
 
 /etc/default/docker:
