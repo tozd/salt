@@ -140,19 +140,22 @@ for container, cfg in pillar('docker:containers', {}).items():
         }
 
         # Setup firewall rules
-        firewall = state(
-            Iptables, 'append',
-            '%s-container-port-%s-%s' % (container, port_bind['ip'], port_bind['port']),
-            table='filter',
-            chain='INPUT',
-            jump='ACCEPT',
-            source='0.0.0.0/0',
-            destination='%s/32' % port_bind['ip'],
-            dport=port_bind['port'],
-            proto='tcp' if 'tcp' in port_def else 'udp',
-            save=True,
-            require=Pkg('iptables'),
-        )
+        sources = port_bind.get('firewall', {}).get('source', ['0.0.0.0/0'])
+        for source in sources:
+            firewall = state(
+                Iptables, 'append',
+                '%s-container-port-%s-%s' % (container, port_bind['ip'], port_bind['port']),
+                table='filter',
+                chain='INPUT',
+                jump='ACCEPT',
+                source=source,
+                destination='%s/32' % port_bind['ip'],
+                dport=port_bind['port'],
+                proto='tcp' if 'tcp' in port_def else 'udp',
+                save=True,
+                require=Pkg('iptables'),
+            )
+            requires.append(firewall)
 
     # Prepare the environment
     cfg_environment = cfg.get('environment', {})
