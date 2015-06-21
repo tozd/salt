@@ -207,6 +207,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         network_mode=network_mode,
         volumes=volumes,
         links=links,
+        restart_policy={'Name': 'always'},
         require=requires,
     )
 
