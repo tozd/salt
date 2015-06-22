@@ -1,2 +1,3 @@
 python-msgpack:
-  pkg.installed
+  pkg.installed:
+    - reload_modules: True
