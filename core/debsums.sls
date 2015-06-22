@@ -1,6 +1,5 @@
 debsums:
-  pkg:
-    - installed
+  pkg.installed
 
 debsums-init:
   cmd.wait:

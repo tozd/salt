@@ -73,3 +73,4 @@ include:
   - .vim
   - .upgrades
   - .debsums
+  - .msgpack
