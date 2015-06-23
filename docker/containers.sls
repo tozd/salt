@@ -14,6 +14,33 @@ def state(_cls, _func, _id, **kwargs):
     except pyobjects.DuplicateState:
         return _cls(_id)
 
+# Setup chain for managing docker binds
+firewall_binds_chain = state(
+    Iptables, 'chain_present',
+    'docker-containers-firewall-binds',
+    name='TOZD_DOCKER_BINDS',
+    table='filter',
+    require=Pkg('iptables'),
+)
+
+firewall_binds_chain = state(
+    Iptables, 'flush',
+    'docker-containers-firewall-binds-flush',
+    chain='TOZD_DOCKER_BINDS',
+    table='filter',
+    require=firewall_binds_chain,
+)
+
+firewall_binds_chain = state(
+    Iptables, 'insert',
+    'docker-containers-firewall-binds-attach',
+    table='filter',
+    chain='FORWARD',
+    position=1,
+    jump='TOZD_DOCKER_BINDS',
+    require=firewall_binds_chain,
+)
+
 # Automatically configure docker-hosts on all containers when detected
 docker_hosts = None
 for container, cfg in pillar('docker:containers', {}).items():
@@ -163,12 +190,34 @@ for container, cfg in pillar('docker:containers', {}).items():
             'HostPort': port_bind['port'],
         }
 
+        # Mark incoming packets to support Docker NAT (without docker-proxy)
+        DOCKER_MARK_OFFSET = 81000
+        # TODO: How to support same port bound to different IPs?
+        port_mark = DOCKER_MARK_OFFSET + port_bind['port']
+        firewall = state(
+            Iptables, 'insert',
+            '%s-container-port-dn-mark-%s-%s' % (container, port_bind['ip'], port_bind['port']),
+            **{
+                'table': 'mangle',
+                'chain': 'PREROUTING',
+                'jump': 'MARK',
+                'position': 1,
+                'set-mark': port_mark,
+                'destination': '%s/32' % port_bind['ip'],
+                'dport': port_bind['port'],
+                'proto': 'tcp' if 'tcp' in port_def else 'udp',
+                'save': True,
+                'require': Pkg('iptables'),
+            }
+        )
+        requires.append(firewall)
+
         # Setup firewall rules
         sources = port_bind.get('firewall', {}).get('source', ['0.0.0.0/0'])
         for source in sources:
             firewall = state(
                 Iptables, 'append',
-                '%s-container-port-%s-%s' % (container, port_bind['ip'], port_bind['port']),
+                '%s-container-port-dp-%s-%s-%s' % (container, port_bind['ip'], port_bind['port'], source),
                 table='filter',
                 chain='INPUT',
                 jump='ACCEPT',
@@ -180,6 +229,36 @@ for container, cfg in pillar('docker:containers', {}).items():
                 require=Pkg('iptables'),
             )
             requires.append(firewall)
+
+            firewall = state(
+                Iptables, 'append',
+                '%s-container-port-dn-%s-%s-%s' % (container, port_bind['ip'], port_bind['port'], source),
+                table='filter',
+                chain='TOZD_DOCKER_BINDS',
+                jump='ACCEPT',
+                source=source,
+                match='mark',
+                mark=port_mark,
+                proto='tcp' if 'tcp' in port_def else 'udp',
+                save=True,
+                require=Pkg('iptables'),
+            )
+            requires.append(firewall)
+
+        # Drop all the remaining marked packets
+        firewall = state(
+            Iptables, 'append',
+            '%s-container-port-dn-drop-%s-%s' % (container, port_bind['ip'], port_bind['port']),
+            table='filter',
+            chain='TOZD_DOCKER_BINDS',
+            jump='DROP',
+            match='mark',
+            mark=port_mark,
+            proto='tcp' if 'tcp' in port_def else 'udp',
+            save=True,
+            require=Pkg('iptables'),
+        )
+        requires.append(firewall)
 
     # Prepare the environment
     cfg_environment = cfg.get('environment', {})
