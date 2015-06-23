@@ -19,7 +19,7 @@ firewall_binds_chain = state(
     Iptables, 'chain_present',
     'docker-containers-firewall-binds',
     name='TOZD_DOCKER_BINDS',
-    table='filter',
+    table='mangle',
     require=Pkg('iptables'),
 )
 
@@ -27,18 +27,46 @@ firewall_binds_chain = state(
     Iptables, 'flush',
     'docker-containers-firewall-binds-flush',
     chain='TOZD_DOCKER_BINDS',
-    table='filter',
+    table='mangle',
     require=firewall_binds_chain,
 )
 
 firewall_binds_chain = state(
     Iptables, 'insert',
     'docker-containers-firewall-binds-attach',
-    table='filter',
-    chain='FORWARD',
+    table='mangle',
+    chain='PREROUTING',
     position=1,
     jump='TOZD_DOCKER_BINDS',
     require=firewall_binds_chain,
+)
+
+# Setup ACCEPT/DROP rules in filter FORWARD table based on marks
+DOCKER_MARK_ACCEPT = 81000
+DOCKER_MARK_DROP = 81001
+
+firewall = state(
+    Iptables, 'insert',
+    'docker-containers-firewall-mark-accept',
+    table='filter',
+    chain='FORWARD',
+    position=1,
+    match='mark',
+    mark=DOCKER_MARK_ACCEPT,
+    jump='ACCEPT',
+    require=Pkg('iptables'),
+)
+
+firewall = state(
+    Iptables, 'insert',
+    'docker-containers-firewall-mark-drop',
+    table='filter',
+    chain='FORWARD',
+    position=1,
+    match='mark',
+    mark=DOCKER_MARK_DROP,
+    jump='DROP',
+    require=firewall,
 )
 
 # Automatically configure docker-hosts on all containers when detected
@@ -190,19 +218,15 @@ for container, cfg in pillar('docker:containers', {}).items():
             'HostPort': port_bind['port'],
         }
 
-        # Mark incoming packets to support Docker NAT (without docker-proxy)
-        DOCKER_MARK_OFFSET = 81000
-        # TODO: How to support same port bound to different IPs?
-        port_mark = DOCKER_MARK_OFFSET + port_bind['port']
+        # Default policy for this ip/port is DROP
         firewall = state(
-            Iptables, 'insert',
-            '%s-container-port-dn-mark-%s-%s' % (container, port_bind['ip'], port_bind['port']),
+            Iptables, 'append',
+            '%s-container-port-dn-drop-%s-%s' % (container, port_bind['ip'], port_bind['port']),
             **{
                 'table': 'mangle',
-                'chain': 'PREROUTING',
+                'chain': 'TOZD_DOCKER_BINDS',
                 'jump': 'MARK',
-                'position': 1,
-                'set-mark': port_mark,
+                'set-mark': DOCKER_MARK_DROP,
                 'destination': '%s/32' % port_bind['ip'],
                 'dport': port_bind['port'],
                 'proto': 'tcp' if 'tcp' in port_def else 'udp',
@@ -230,35 +254,24 @@ for container, cfg in pillar('docker:containers', {}).items():
             )
             requires.append(firewall)
 
+            # Mark incoming packets to support Docker NAT (without docker-proxy)
             firewall = state(
                 Iptables, 'append',
                 '%s-container-port-dn-%s-%s-%s' % (container, port_bind['ip'], port_bind['port'], source),
-                table='filter',
-                chain='TOZD_DOCKER_BINDS',
-                jump='ACCEPT',
-                source=source,
-                match='mark',
-                mark=port_mark,
-                proto='tcp' if 'tcp' in port_def else 'udp',
-                save=True,
-                require=Pkg('iptables'),
+                **{
+                    'table': 'mangle',
+                    'chain': 'TOZD_DOCKER_BINDS',
+                    'jump': 'MARK',
+                    'set-mark': DOCKER_MARK_ACCEPT,
+                    'source': source,
+                    'destination': '%s/32' % port_bind['ip'],
+                    'dport': port_bind['port'],
+                    'proto': 'tcp' if 'tcp' in port_def else 'udp',
+                    'save': True,
+                    'require': Pkg('iptables'),
+                }
             )
             requires.append(firewall)
-
-        # Drop all the remaining marked packets
-        firewall = state(
-            Iptables, 'append',
-            '%s-container-port-dn-drop-%s-%s' % (container, port_bind['ip'], port_bind['port']),
-            table='filter',
-            chain='TOZD_DOCKER_BINDS',
-            jump='DROP',
-            match='mark',
-            mark=port_mark,
-            proto='tcp' if 'tcp' in port_def else 'udp',
-            save=True,
-            require=Pkg('iptables'),
-        )
-        requires.append(firewall)
 
     # Prepare the environment
     cfg_environment = cfg.get('environment', {})
