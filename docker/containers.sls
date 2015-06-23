@@ -213,6 +213,9 @@ for container, cfg in pillar('docker:containers', {}).items():
     # Setup required ports
     ports = {}
     for port_def, port_bind in cfg.get('ports', {}).items():
+        if port_bind['ip'].startswith('pillar:'):
+            port_bind['ip'] = pillar(port_bind['ip'][len('pillar:'):])
+
         ports[port_def] = {
             'HostIp': port_bind['ip'],
             'HostPort': port_bind['port'],
