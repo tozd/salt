@@ -12,7 +12,9 @@ iface lo inet loopback
 auto {{ iface }}
 {%- set primary = True -%}
 
-{%- for ipv6 in cfg.get('ipv6', []) %}
+{%- set addresses = cfg.get('ipv6', []) -%}
+{%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
+{%- for ipv6 in addresses %}
 {%- if ipv6['type'] == 'static' %}
 iface {{ iface }} inet6 static
   address {{ ipv6['address'] }}
@@ -26,7 +28,9 @@ iface {{ iface }} inet6 static
 {% endif -%}
 {% endfor -%}
 
-{%- for ipv4 in cfg.get('ipv4', []) %}
+{%- set addresses = cfg.get('ipv4', []) -%}
+{%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
+{%- for ipv4 in addresses %}
 {%- if ipv4['type'] == 'static' %}
 iface {{ iface }} inet static
   address {{ ipv4['address'] }}
