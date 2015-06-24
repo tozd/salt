@@ -9,7 +9,7 @@ docker-repository:
 
 lxc-docker:
   pkg.installed:
-    - name: lxc-docker-1.6.2
+    - name: lxc-docker-1.5.0
 
 docker-py:
   pip.installed:
