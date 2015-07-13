@@ -164,6 +164,17 @@ for container, cfg in pillar('docker:containers', {}).items():
                 mode=vol_cfg.get('mode', 644),
                 makedirs=True,
             )
+        elif vol_type == 'tmpfs':
+            volume = state(
+                Mount, 'mounted',
+                vol_name,
+                device='tmpfs',
+                fstype=vol_type,
+                opts=vol_cfg.get('opts', 'nodev,nosuid,mode=755,size=65536k'),
+                user=vol_cfg.get('user', 'root'),
+                mkmnt=True,
+                persist=True,
+            )
         elif vol_type in ('socket', 'other'):
             # Nothing should be done for sockets
             volume = None
