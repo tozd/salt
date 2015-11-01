@@ -69,18 +69,6 @@ firewall = state(
     require=firewall,
 )
 
-# Automatically configure docker-hosts on all containers when detected
-docker_hosts = None
-for container, cfg in pillar('docker:containers', {}).items():
-    if cfg.get('image', '') != 'tozd/docker-hosts':
-        continue
-
-    # Find the volume bound under /hosts
-    for vol_name, vol_cfg in cfg.get('volumes', {}).iteritems():
-        if vol_cfg.get('bind', '') == '/hosts':
-            docker_hosts = (container, vol_name)
-            break
-
 # Setup docker containers
 for container, cfg in pillar('docker:containers', {}).items():
     docker_image = state(
@@ -93,18 +81,6 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     requires = [docker_image]
     volumes = {}
-
-    # Automatically add the docker-hosts volume when detected
-    if docker_hosts is not None:
-        dh_container, dh_volume = docker_hosts
-
-        if container != dh_container:
-            cfg.setdefault('volumes', {})[dh_volume] = {
-                'bind': '/etc/hosts',
-                'type': 'container',
-                'container': dh_container,
-                'readonly': True,
-            }
 
     # Create the required configs
     for cfg_name, cfg_path in cfg.get('config', {}).items():

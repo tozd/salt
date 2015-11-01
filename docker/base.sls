@@ -1,15 +1,16 @@
 docker-repository:
   pkgrepo.managed:
     - humanname: Docker
-    - name: deb https://get.docker.io/ubuntu docker main
-    - keyid: 36A1D7869245C8950F966E92D8576A8BA88D21E9
+    - name: deb https://apt.dockerproject.org/repo ubuntu-trusty main
+    - keyid: 58118E89F3A912897C070ADBF76221572C52609D
     - keyserver: keyserver.ubuntu.com
     - require_in:
-      - pkg: lxc-docker
+      - pkg: docker-engine
 
-lxc-docker:
+docker-engine:
   pkg.installed:
-    - name: lxc-docker-1.5.0
+    - name: docker-engine
+    - version: 1.8.3-0~trusty
 
 docker-py:
   pip.installed:
@@ -60,7 +61,7 @@ docker-py:
     - group: root
     - mode: 644
     - require:
-      - pkg: lxc-docker
+      - pkg: docker-engine
 
 docker:
   service.running:
