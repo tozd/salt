@@ -11,6 +11,7 @@ docker-engine:
   pkg.installed:
     - name: docker-engine
     - version: 1.8.3-0~trusty
+    - hold: True
 
 docker-py:
   pip.installed:
