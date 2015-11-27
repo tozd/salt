@@ -20,6 +20,11 @@ docker-py:
     - require:
       - sls: pip
 
+docker-compose:
+  pip.installed:
+    - require:
+      - sls: pip
+
 /srv/docker:
   file.directory:
     - user: root
