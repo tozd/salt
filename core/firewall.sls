@@ -1,8 +1,9 @@
 iptables:
-  pkg.installed:
+  pkg.latest:
     - pkgs:
       - iptables
       - iptables-persistent
+    - refresh: True
     - reload_modules: True
 
 iptables-allow-localhost-1:

@@ -1,5 +1,6 @@
 vim:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 vim-editor:
   alternatives.set:

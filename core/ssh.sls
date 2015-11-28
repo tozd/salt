@@ -1,8 +1,10 @@
 openssh-client:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 openssh-server:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 ssh:
   service.running:
@@ -33,7 +35,8 @@ sshd-keepalive-tcp:
       - pkg: openssh-server
 
 mosh:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 iptables-ssh-policy:
   iptables.append:

@@ -1,5 +1,6 @@
 mdadm:
-  pkg.installed:
+  pkg.latest:
+    - refresh: True
     - require:
       - sls: mailer
   service.running:

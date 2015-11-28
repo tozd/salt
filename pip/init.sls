@@ -1,3 +1,4 @@
 python-pip:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
     - reload_modules: True

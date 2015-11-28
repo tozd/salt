@@ -1,3 +1,4 @@
 python-msgpack:
-  pkg.installed:
+  pkg.latest:
     - reload_modules: True
+    - refresh: True

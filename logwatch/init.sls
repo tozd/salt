@@ -1,6 +1,6 @@
 logwatch:
-  pkg:
-    - installed
+  pkg.latest:
+    - refresh: True
 
 /etc/logwatch/scripts/services/kernel:
   file.managed:

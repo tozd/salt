@@ -1,5 +1,6 @@
 unattended-upgrades:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 /etc/apt/apt.conf.d/20auto-upgrades:
   file.managed:

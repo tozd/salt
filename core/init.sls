@@ -34,26 +34,31 @@ net.ipv4.conf.default.rp_filter:
     - value: 0
 
 sysfsutils:
-  pkg:
-    - installed
+  pkg.latest:
+    - refresh: True
   service.running:
     - require:
       - pkg: sysfsutils
 
 htop:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 iotop:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 sysstat:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 iptraf:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 tcpdump:
-  pkg.installed
+  pkg.latest:
+    - refresh: True
 
 inputrc-history:
   file.blockreplace:
