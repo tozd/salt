@@ -83,6 +83,8 @@ for container, cfg in pillar('docker:containers', {}).items():
 
 # Setup docker containers
 for container, cfg in pillar('docker:containers', {}).items():
+    cfg.setdefault('volumes', {})
+
     docker_image = state(
         Docker, 'pulled',
         '%s-image' % container,
@@ -99,7 +101,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         dh_container, dh_volume = docker_hosts
 
         if container != dh_container:
-            cfg.setdefault('volumes', {})[dh_volume] = {
+            cfg['volumes'][dh_volume] = {
                 'bind': '/etc/hosts',
                 'type': 'container',
                 'container': dh_container,
@@ -138,8 +140,23 @@ for container, cfg in pillar('docker:containers', {}).items():
             makedirs=True,
         ))
 
+    # Automatically add required volumes for systemd inside container
+    if cfg.get('image', '') in ['tozd/ubuntu-systemd', 'tozd/ubuntu-user']:
+        cfg['volumes']['/srv/tmp/systemd-cgroup'] = {
+            'bind': '/sys/fs/cgroup',
+            'readonly': True,
+        }
+        cfg['volumes']['/srv/tmp/%s/run' % container] = {
+            'bind': '/run',
+            'type': 'tmpfs',
+        }
+        cfg['volumes']['/srv/tmp/%s/run-lock' % container] = {
+            'bind': '/run/lock',
+            'type': 'tmpfs',
+        }
+
     # Create the required volumes
-    for vol_name, vol_cfg in cfg.get('volumes', {}).items():
+    for vol_name, vol_cfg in cfg['volumes'].items():
         volumes[vol_name] = {
             'bind': vol_cfg['bind'],
             'ro': vol_cfg.get('readonly', False),
