@@ -13,6 +13,20 @@ single-host-reverse-proxy-image:
     - mode: 755
     - makedirs: True
 
+/srv/nginx/dockergen:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: 755
+    - makedirs: True
+
+/srv/nginx/dnsmasq:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: 755
+    - makedirs: True
+
 /srv/nginx/ssl:
   file.directory:
     - user: root
@@ -42,6 +56,10 @@ single-host-reverse-proxy-container:
     - volumes:
         /srv/nginx/log:
           bind: /var/log/nginx
+        /srv/nginx/dockergen:
+          bind: /var/log/dockergen
+        /srv/nginx/dnsmasq:
+          bind: /var/log/dnsmasq
         /srv/nginx/ssl:
           bind: /ssl
         /srv/nginx/sites:
@@ -52,6 +70,8 @@ single-host-reverse-proxy-container:
         Name: always
     - require:
       - file: /srv/nginx/log
+      - file: /srv/nginx/dockergen
+      - file: /srv/nginx/dnsmasq
       - file: /srv/nginx/ssl
       - file: /srv/nginx/sites
       - docker: single-host-reverse-proxy-image
