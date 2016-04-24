@@ -19,14 +19,16 @@ auto {{ iface }}
 iface {{ iface }} inet6 static
   address {{ ipv6['address'] }}
   netmask {{ ipv6['netmask'] }}
+{%- if ipv6.get('gateway', None) %}
   gateway {{ ipv6['gateway'] }}
+{%- endif -%}
   autoconf 0
 {%- if primary %}
   dns-nameservers {{ pillar['network']['dns']|join(' ') }}
-{% endif -%}
+{%- endif -%}
 {%- set primary = False -%}
-{% endif -%}
-{% endfor -%}
+{%- endif -%}
+{%- endfor %}
 
 {%- set addresses = cfg.get('ipv4', []) -%}
 {%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
@@ -35,11 +37,13 @@ iface {{ iface }} inet6 static
 iface {{ iface }} inet static
   address {{ ipv4['address'] }}
   netmask {{ ipv4['netmask'] }}
+{%- if ipv4.get('gateway', None) %}
   gateway {{ ipv4['gateway'] }}
+{%- endif -%}
 {%- if primary %}
   dns-nameservers {{ pillar['network']['dns']|join(' ') }}
-{% endif -%}
+{%- endif -%}
 {%- set primary = False -%}
-{% endif -%}
-{% endfor -%}
-{% endfor -%}
+{%- endif -%}
+{%- endfor %}
+{%- endfor %}
