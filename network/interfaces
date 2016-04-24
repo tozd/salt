@@ -10,7 +10,7 @@ iface lo inet loopback
 # External interfaces
 {%- for iface, cfg in pillar['network']['interfaces'].items() %}
 auto {{ iface }}
-{%- set primary = True -%}
+{%- set vars = {'primary': True} -%}
 
 {%- set addresses = cfg.get('ipv6', []) -%}
 {%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
@@ -23,10 +23,9 @@ iface {{ iface }} inet6 static
   gateway {{ ipv6['gateway'] }}
 {%- endif -%}
   autoconf 0
-{%- if primary %}
+{%- if vars.pop('primary', False) %}
   dns-nameservers {{ pillar['network']['dns']|join(' ') }}
 {%- endif -%}
-{%- set primary = False -%}
 {%- endif -%}
 {%- endfor %}
 
@@ -40,10 +39,9 @@ iface {{ iface }} inet static
 {%- if ipv4.get('gateway', None) %}
   gateway {{ ipv4['gateway'] }}
 {%- endif -%}
-{%- if primary %}
+{%- if vars.pop('primary', False) %}
   dns-nameservers {{ pillar['network']['dns']|join(' ') }}
 {%- endif -%}
-{%- set primary = False -%}
 {%- endif -%}
 {%- endfor %}
 {%- endfor %}
