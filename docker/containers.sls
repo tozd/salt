@@ -348,7 +348,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
         environment=environment,
         ports=ports,
-        mem_limit=resources.get('memory', 0),
+        mem_limit=resources.get('memory', None),
         cap_add=capabilities_add,
         cap_drop=capabilities_drop,
         privileged=cfg.get('privileged', False),
