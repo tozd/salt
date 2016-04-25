@@ -60,6 +60,11 @@ tcpdump:
   pkg.latest:
     - refresh: True
 
+python-gnupg:
+  pkg.latest:
+    - refresh: True
+    - reload_modules: True
+
 inputrc-history:
   file.blockreplace:
     - name: /etc/inputrc
