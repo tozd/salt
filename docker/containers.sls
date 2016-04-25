@@ -5,6 +5,7 @@ from salt.utils import pyobjects
 
 Sls = pyobjects.StateFactory('sls')
 Docker = pyobjects.StateFactory('docker')
+Iptables = pyobjects.StateFactory('iptables')
 
 def state(_cls, _func, _id, **kwargs):
     from salt.utils import pyobjects
