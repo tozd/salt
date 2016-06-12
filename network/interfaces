@@ -21,7 +21,7 @@ iface {{ iface }} inet6 static
   netmask {{ ipv6['netmask'] }}
 {%- if ipv6.get('gateway', None) %}
   gateway {{ ipv6['gateway'] }}
-{%- endif -%}
+{%- endif %}
   autoconf 0
 {%- if vars.pop('primaryIPv6', False) and salt['pillar.get']('network:dns:ipv6', None) %}
   dns-nameservers {{ pillar['network']['dns']['ipv6']|join(' ') }}
