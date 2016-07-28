@@ -8,7 +8,7 @@ python-pip-package:
 
 python-pip:
   cmd.run:
-    - name: easy_install pip
+    - name: easy_install pip==8.1.1
     - unless: which pip
     - require:
       - pkg: python-pip-package
