@@ -71,8 +71,6 @@ single-host-reverse-proxy-container:
           bind: /var/log/dockergen
         /srv/nginx/letsencrypt:
           bind: /var/log/letsencrypt
-        /srv/nginx/dockergen:
-          bind: /var/log/dockergen
         /srv/nginx/dnsmasq:
           bind: /var/log/dnsmasq
         /srv/nginx/ssl:
@@ -87,7 +85,6 @@ single-host-reverse-proxy-container:
       - file: /srv/nginx/log
       - file: /srv/nginx/dockergen
       - file: /srv/nginx/letsencrypt
-      - file: /srv/nginx/dockergen
       - file: /srv/nginx/dnsmasq
       - file: /srv/nginx/ssl
       - file: /srv/nginx/sites
