@@ -27,13 +27,6 @@ single-host-reverse-proxy-image:
     - mode: 755
     - makedirs: True
 
-/srv/nginx/dockergen:
-  file.directory:
-    - user: root
-    - group: root
-    - mode: 755
-    - makedirs: True
-
 /srv/nginx/dnsmasq:
   file.directory:
     - user: root
