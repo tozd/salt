@@ -366,7 +366,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         network_mode=network_mode,
         binds=binds,
         links=links,
-        restart_policy={'Name': 'unless-stopped'},
+        restart_policy='unless-stopped',
         require=requires,
     )
 
