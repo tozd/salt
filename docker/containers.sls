@@ -304,19 +304,19 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     # Prepare the environment
     cfg_environment = cfg.get('environment', {})
-    environment = []
+    environment = {}
     if isinstance(cfg_environment, dict):
         # Direct environment variable specification
-        environment += [{key: value for key, value in cfg_environment.items()}]
+        environment.update(cfg_environment)
     elif isinstance(cfg_environment, list):
         for item in cfg_environment:
             if isinstance(item, dict):
                 # Direct environment variable specification
-                environment += [{key: value for key, value in item.items()}]
+                environment.update(item)
             elif isinstance(item, basestring):
                 # Reference to common environment
                 item = pillar('docker:environments:%s' % item)
-                environment += [{key: value for key, value in item.items()}]
+                environment.update(item)
 
     # Configure resource limits
     resources = cfg.get('resources', {})
