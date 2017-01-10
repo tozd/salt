@@ -1,7 +1,15 @@
+apt-transport-https:
+  pkg.latest:
+    - refresh: True
+
+ca-certificates:
+  pkg.latest:
+    - refresh: True
+
 docker-repository:
   pkgrepo.managed:
     - humanname: Docker
-    - name: deb https://apt.dockerproject.org/repo ubuntu-trusty main
+    - name: deb https://apt.dockerproject.org/repo ubuntu-xenial main
     - keyid: 58118E89F3A912897C070ADBF76221572C52609D
     - keyserver: keyserver.ubuntu.com
     - require_in:
@@ -10,13 +18,13 @@ docker-repository:
 docker-engine:
   pkg.installed:
     - name: docker-engine
-    - version: 1.8.3-0~trusty
+    - version: 1.12.5-0~ubuntu-xenial
     - refresh: True
     - hold: True
 
 docker-py:
   pip.installed:
-    - name: docker-py==1.8.0
+    - name: docker-py==1.10.6
     - reload_modules: True
     - require:
       - sls: pip
@@ -61,12 +69,13 @@ docker-compose:
     - mode: 700
     - makedirs: True
 
-/etc/default/docker:
+/etc/systemd/system/docker.service.d/10-execstart.conf:
   file.managed:
-    - source: salt://docker/docker.conf
+    - source: salt://docker/10-execstart.conf
     - user: root
     - group: root
     - mode: 644
+    - makedirs: True
     - require:
       - pkg: docker-engine
 
@@ -78,7 +87,7 @@ docker:
       - file: /srv/log
       - file: /srv/repositories
     - watch:
-      - file: /etc/default/docker
+      - file: /etc/systemd/system/docker.service.d/10-execstart.conf
 
 docker-available:
   cmd.run:
