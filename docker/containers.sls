@@ -323,7 +323,7 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     network_mode = cfg.get('network_mode', None)
     if network_mode is not None:
-        if network_mode['type'] == 'container':
+        if network_mode.get('type', None) == 'container':
             requires.append(Docker('%s-container' % network_mode['container']))
             network_mode = 'container:%s' % network_mode['container']
         else:
@@ -331,6 +331,7 @@ for container, cfg in pillar('docker:containers', {}).items():
             # TODO: Is there a better way to require a network's state without recreating it every time?
             docker_network = state(
                 Docker, 'network_present',
+                '%s-network' % network_mode['name'],
                 name=network_mode['name'],
                 driver=network_mode.get('driver', None),
                 require=Sls('docker.base'),
