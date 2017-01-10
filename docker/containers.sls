@@ -337,6 +337,8 @@ for container, cfg in pillar('docker:containers', {}).items():
             )
             requires.append(docker_network)
             network_mode = network_mode['name']
+    else:
+        network_mode = 'bridge'
 
     capabilities_add = []
     capabilities_drop = []
@@ -357,7 +359,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
         environment=environment,
         port_bindings=port_bindings,
-        memory=resources.get('memory', None),
+        memory=resources.get('memory', 0),
         cap_add=capabilities_add,
         cap_drop=capabilities_drop,
         privileged=cfg.get('privileged', False),
