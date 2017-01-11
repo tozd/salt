@@ -9,7 +9,11 @@ ca-certificates:
 docker-repository:
   pkgrepo.managed:
     - humanname: Docker
+    {% if grains['oscodename'] == 'xenial' %}
     - name: deb https://apt.dockerproject.org/repo ubuntu-xenial main
+    {% elif grains['oscodename'] == 'trusty' %}
+    - name: deb https://apt.dockerproject.org/repo ubuntu-trusty main
+    {% endif %}
     - keyid: 58118E89F3A912897C070ADBF76221572C52609D
     - keyserver: keyserver.ubuntu.com
     - require_in:
@@ -18,7 +22,11 @@ docker-repository:
 docker-engine:
   pkg.installed:
     - name: docker-engine
+    {% if grains['oscodename'] == 'xenial' %}
     - version: 1.12.5-0~ubuntu-xenial
+    {% elif grains['oscodename'] == 'trusty' %}
+    - version: 1.8.3-0~trusty
+    {% endif %}
     - refresh: True
     - hold: True
 
@@ -69,9 +77,15 @@ docker-compose:
     - mode: 700
     - makedirs: True
 
-/etc/systemd/system/docker.service.d/10-execstart.conf:
+docker-configuration-file:
   file.managed:
+    {% if grains['oscodename'] == 'xenial' %}
+    - name: /etc/systemd/system/docker.service.d/10-execstart.conf
     - source: salt://docker/10-execstart.conf
+    {% elif grains['oscodename'] == 'trusty' %}
+    - name: /etc/default/docker
+    - source: salt://docker/docker.conf
+    {% endif %}
     - user: root
     - group: root
     - mode: 644
@@ -87,7 +101,7 @@ docker:
       - file: /srv/log
       - file: /srv/repositories
     - watch:
-      - file: /etc/systemd/system/docker.service.d/10-execstart.conf
+      - file: docker-configuration-file
 
 docker-available:
   cmd.run:
