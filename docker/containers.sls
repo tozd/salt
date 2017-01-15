@@ -318,6 +318,10 @@ for container, cfg in pillar('docker:containers', {}).items():
                 item = pillar('docker:environments:%s' % item)
                 environment.update(item)
 
+    # Assure that all values are strings.
+    for key, value in environment.items():
+      environment[key] = str(value)
+
     # Configure resource limits
     resources = cfg.get('resources', {})
 
