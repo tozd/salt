@@ -18,13 +18,20 @@ def state(_cls, _func, _id, **kwargs):
     except pyobjects.DuplicateState:
         return _cls(_id)
 
+def maybe_join(options, value):
+    join_value = options.get('join', None)
+    if join_value is not None:
+        return join_value.join(value)
+    else:
+        return value
+
 def resolve(value):
     if isinstance(value, dict):
         if 'type' in value:
             if value['type'] == 'pillar':
-                return pillar(value['key'])
+                return maybe_join(value, pillar(value['key']))
             elif value['type'] == 'request':
-                request = urllib2.urlopen(value['url'])
+                response = urllib2.urlopen(value['url'])
                 return response.read()
 
         raise Error("Invalid value: %s" % value)
