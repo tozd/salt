@@ -1,6 +1,8 @@
 #!pyobjects
 
 import os
+import urllib2
+
 from salt.utils import pyobjects
 
 Sls = pyobjects.StateFactory('sls')
@@ -15,6 +17,19 @@ def state(_cls, _func, _id, **kwargs):
         return getattr(_cls, _func)(_id, **kwargs).requisite
     except pyobjects.DuplicateState:
         return _cls(_id)
+
+def resolve(value):
+    if isinstance(value, dict):
+        if 'type' in value:
+            if value['type'] == 'pillar':
+                return pillar(value['key'])
+            elif value['type'] == 'request':
+                request = urllib2.urlopen(value['url'])
+                return response.read()
+
+        raise Error("Invalid value: %s" % value)
+
+    return value
 
 # Setup chain for managing docker binds
 firewall_binds_chain = state(
@@ -242,8 +257,7 @@ for container, cfg in pillar('docker:containers', {}).items():
     # Setup required ports
     port_bindings = []
     for port_def, port_bind in cfg.get('ports', {}).items():
-        if port_bind['ip'].startswith('pillar:'):
-            port_bind['ip'] = pillar(port_bind['ip'][len('pillar:'):])
+        port_bind['ip'] = resolve(port_bind['ip'])
 
         port_bindings.append("%s:%s:%s" % (port_bind['ip'], port_bind['port'], port_def))
 
@@ -320,7 +334,7 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     # Assure that all values are strings.
     for key, value in environment.items():
-      environment[key] = str(value)
+      environment[key] = str(resolve(value))
 
     # Configure resource limits
     resources = cfg.get('resources', {})
