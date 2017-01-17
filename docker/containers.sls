@@ -120,6 +120,7 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     requires = [docker_image]
     binds = []
+    watches = []
 
     # Automatically add the docker-hosts volume when detected
     if docker_hosts is not None:
@@ -261,6 +262,11 @@ for container, cfg in pillar('docker:containers', {}).items():
         requires.append(Docker('%s-container' % link_name))
         links.append("%s:%s" % (link_name, link_alias))
 
+    # Setup dependencies
+    for dependency in cfg.get('dependencies', []):
+        requires.append(Docker('%s-container' % dependency))
+        watches.append(Docker('%s-container' % dependency))
+
     # Setup required ports
     port_bindings = []
     for port_def, port_bind in cfg.get('ports', {}).items():
@@ -394,6 +400,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         links=links,
         restart_policy='unless-stopped',
         require=requires,
+        watch=watches,
     )
 
     # Setup required networks on the host
