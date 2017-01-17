@@ -1,0 +1,3 @@
+# Managed by Salt.
+
+4 * * * * root	/usr/sbin/logwatch --output stdout --service zz-empty_space --service kernel --range 'since 1 hour ago for that hour'

@@ -38,3 +38,12 @@ logwatch:
     - mode: 644
     - require:
       - pkg: logwatch
+
+/etc/cron.d/logwatch:
+  file.managed:
+    - source: salt://logwatch/logwatch.cron
+    - user: root
+    - group: root
+    - mode: 644
+    - require:
+      - pkg: logwatch
