@@ -3,7 +3,7 @@
 import os
 import urllib2
 
-from salt.utils import pyobjects
+from salt.utils import pyobjects, traverse_dict_and_list
 
 Sls = pyobjects.StateFactory('sls')
 Docker = pyobjects.StateFactory('dockerng')
@@ -25,14 +25,21 @@ def maybe_join(options, value):
     else:
         return value
 
+def maybe_traverse(options, value):
+    path_value = options.get('path', None)
+    if path_value is not None:
+        return traverse_dict_and_list(value, path_value, '')
+    else:
+        return value
+
 def resolve(value):
     if isinstance(value, dict):
         if 'type' in value:
             if value['type'] == 'pillar':
-                return maybe_join(value, pillar(value['key']))
+                return maybe_join(value, maybe_traverse(value, pillar(value['key'])))
             elif value['type'] == 'request':
                 response = urllib2.urlopen(value['url'])
-                return response.read()
+                return maybe_join(value, maybe_traverse(value, response.read()))
 
         raise Error("Invalid value: %s" % value)
 
