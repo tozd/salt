@@ -39,6 +39,8 @@ docker-py:
 
 docker-compose:
   pip.installed:
+    # We use an older version of Docker compose because a newer one depends on 2.0 version of docker-py.
+    - name: docker-compose<1.10.0
     - require:
       - sls: pip
 
