@@ -65,6 +65,10 @@ python-gnupg:
     - refresh: True
     - reload_modules: True
 
+python-apt:
+  pkg.latest:
+    - refresh: True
+
 inputrc-history:
   file.blockreplace:
     - name: /etc/inputrc
