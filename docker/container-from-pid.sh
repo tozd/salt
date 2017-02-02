@@ -14,8 +14,9 @@ function getName {
     exit 2
   fi
 
-  local parentPid="$(ps -o ppid= -p "$pid")"
-  local containerId="$(ps -o args= -f -p "$parentPid" | grep docker-containerd-shim | cut -d ' ' -f 2)"
+  # ps returns values potentially padded with spaces, so we pass them as they are without quoting.
+  local parentPid="$(ps -o ppid= -p $pid)"
+  local containerId="$(ps -o args= -f -p $parentPid | grep docker-containerd-shim | cut -d ' ' -f 2)"
 
   if [[ -n "$containerId" ]]; then
     local containerName="$(docker inspect --format '{{.Name}}' "$containerId" | sed 's/^\///')"
