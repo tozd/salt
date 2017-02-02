@@ -111,3 +111,12 @@ docker-available:
     - timeout: 15
     - require:
       - service: docker
+
+container-from-pid:
+  file.managed:
+    - name: /usr/local/bin/container-from-pid
+    - source: salt://docker/container-from-pid.sh
+    - user: root
+    - group: root
+    - mode: 755
+    - makedirs: True
