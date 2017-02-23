@@ -390,6 +390,15 @@ for container, cfg in pillar('docker:containers', {}).items():
         else:
             capabilities_add.append(capability)
 
+    # TODO: This should depend on the Docker version on the minion.
+    #       If < 1.9 then it should be "always". But it seems there is no way to know the version so we use a proxy,
+    #       the Ubuntu version name, because on trusty we install Docker 1.8.
+    #       See: https://github.com/saltstack/salt/issues/39582
+    if grains('oscodename') == 'trusty':
+        restart_policy = 'always'
+    else:
+        restart_policy = 'unless-stopped'
+
     docker_container = state(
         Docker, 'running',
         '%s-container' % container,
@@ -405,7 +414,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         network_mode=network_mode,
         binds=binds,
         links=links,
-        restart_policy='unless-stopped',
+        restart_policy=restart_policy,
         require=requires,
         watch=watches,
     )
