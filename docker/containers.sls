@@ -367,6 +367,8 @@ for container, cfg in pillar('docker:containers', {}).items():
         else:
             # TODO: Support attaching to multiple networks.
             # TODO: Is there a better way to require a network's state without recreating it every time?
+            network_mode['name'] = resolve(network_mode['name'])
+
             docker_network = state(
                 Docker, 'network_present',
                 '%s-network' % network_mode['name'],
