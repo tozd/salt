@@ -360,11 +360,7 @@ for container, cfg in pillar('docker:containers', {}).items():
     resources = cfg.get('resources', {})
 
     network_mode = cfg.get('network_mode', None)
-    # TODO: This should depend on the Docker version on the minion.
-    #       Version < 1.9 do not support networks yet. But it seems there is no way to know the version so we use a proxy,
-    #       the Ubuntu version name, because on trusty we install Docker 1.8.
-    #       See: https://github.com/saltstack/salt/issues/39582
-    if network_mode is not None and grains('oscodename') != 'trusty':
+    if network_mode is not None:
         if network_mode.get('type', None) == 'container':
             requires.append(Docker('%s-container' % network_mode['container']))
             network_mode = 'container:%s' % network_mode['container']
