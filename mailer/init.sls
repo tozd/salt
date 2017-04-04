@@ -11,6 +11,8 @@ exim4:
     - mode: 644
     - user: root
     - group: root
+    - require:
+      - file: /etc/hostname
 
 /etc/exim4/update-exim4.conf.conf:
   file.managed:
