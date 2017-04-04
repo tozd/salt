@@ -2,20 +2,29 @@
 # THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
 # ANY MANUAL CHANGES WILL BE OVERWRITTEN!
 # ------------------------------------------------------------------------
+{%- if grains['oscodename'] == 'xenial' %}
+
+source /etc/network/interfaces.d/*
+{%- endif %}
 
 # Loopback interface
 auto lo
 iface lo inet loopback
+{%- if salt['pillar.get']('network:interfaces', None) %}
 
 # External interfaces
-{%- for iface, cfg in pillar['network']['interfaces'].items() %}
+{%- for iface, cfg in salt['pillar.get']('network:interfaces', {}).items() %}
 auto {{ iface }}
 {%- set vars = {'primaryIPv4': true, 'primaryIPv6': true} -%}
 
 {%- set addresses = cfg.get('ipv6', []) -%}
 {%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
 {%- for ipv6 in addresses %}
-{%- if ipv6['type'] == 'static' %}
+{%- if ipv6['type'] == 'dhcp' %}
+iface {{ iface }} inet6 dhcp
+{%- elif ipv6['type'] == 'auto' %}
+iface {{ iface }} inet6 auto
+{%- elif ipv6['type'] == 'static' %}
 iface {{ iface }} inet6 static
   address {{ ipv6['address'] }}
   netmask {{ ipv6['netmask'] }}
@@ -25,23 +34,26 @@ iface {{ iface }} inet6 static
   autoconf 0
 {%- if vars.pop('primaryIPv6', False) and salt['pillar.get']('network:dns:ipv6', None) %}
   dns-nameservers {{ pillar['network']['dns']['ipv6']|join(' ') }}
-{%- endif -%}
-{%- endif -%}
+{%- endif %}
+{%- endif %}
 {%- endfor %}
 
 {%- set addresses = cfg.get('ipv4', []) -%}
 {%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
 {%- for ipv4 in addresses %}
-{%- if ipv4['type'] == 'static' %}
+{%- if ipv4['type'] == 'dhcp' %}
+iface {{ iface }} inet dhcp
+{%- elif ipv4['type'] == 'static' %}
 iface {{ iface }} inet static
   address {{ ipv4['address'] }}
   netmask {{ ipv4['netmask'] }}
 {%- if ipv4.get('gateway', None) %}
   gateway {{ ipv4['gateway'] }}
-{%- endif -%}
+{%- endif %}
 {%- if vars.pop('primaryIPv4', False) and salt['pillar.get']('network:dns:ipv4', None) %}
   dns-nameservers {{ pillar['network']['dns']['ipv4']|join(' ') }}
-{%- endif -%}
-{%- endif -%}
+{%- endif %}
+{%- endif %}
 {%- endfor %}
 {%- endfor %}
+{%- endif %}
