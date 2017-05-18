@@ -160,13 +160,23 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     # Create the required files
     for file_path, contents in cfg.get('files', {}).items():
+        if isinstance(contents, basestring):
+            user = 'root'
+            group = 'root'
+            mode = 644
+        else:
+            contents = contents['contents']
+            user = contents.get('user', 'root')
+            group = contents.get('group', 'root')
+            mode = contents.get('mode', 644)
+
         requires.append(state(
             File, 'managed',
             file_path,
             contents=contents,
-            user='root',
-            group='root',
-            mode=644,
+            user=user,
+            group=group,
+            mode=mode,
             makedirs=True,
         ))
 
