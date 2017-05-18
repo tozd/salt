@@ -165,10 +165,10 @@ for container, cfg in pillar('docker:containers', {}).items():
             group = 'root'
             mode = 644
         else:
-            contents = contents['contents']
             user = contents.get('user', 'root')
             group = contents.get('group', 'root')
             mode = contents.get('mode', 644)
+            contents = contents['contents']
 
         requires.append(state(
             File, 'managed',
