@@ -369,6 +369,7 @@ for container, cfg in pillar('docker:containers', {}).items():
     # Configure resource limits
     resources = cfg.get('resources', {})
 
+    network_name = None
     network_mode = cfg.get('network_mode', None)
     if network_mode is not None:
         if network_mode.get('type', None) == 'container':
@@ -387,6 +388,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                 require=Sls('docker.base'),
             )
             requires.append(docker_network)
+            network_name = network_mode['name']
             network_mode = network_mode['name']
     else:
         network_mode = 'bridge'
@@ -411,11 +413,17 @@ for container, cfg in pillar('docker:containers', {}).items():
     else:
         restart_policy = 'unless-stopped'
 
+    if network_name and not '.' in hostname:
+        # Construct a FQDN.
+        hostname = hostname + '.' + network_name
+    else:
+        hostname = container
+
     docker_container = state(
         Docker, 'running',
         '%s-container' % container,
         name=container,
-        hostname=container,
+        hostname=hostname,
         image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
         environment=environment,
         port_bindings=port_bindings,
