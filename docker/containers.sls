@@ -413,9 +413,9 @@ for container, cfg in pillar('docker:containers', {}).items():
     else:
         restart_policy = 'unless-stopped'
 
-    if network_name and not '.' in hostname:
+    if network_name and not '.' in container:
         # Construct a FQDN.
-        hostname = hostname + '.' + network_name
+        hostname = container + '.' + network_name
     else:
         hostname = container
 
