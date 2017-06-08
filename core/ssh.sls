@@ -51,3 +51,17 @@ iptables-ssh-policy:
       - pkg: iptables
     - require_in:
       - iptables: iptables-reject-policy
+
+iptables-mosh-policy:
+  iptables.append:
+    - table: filter
+    - chain: INPUT
+    - jump: ACCEPT
+    - source: 0.0.0.0/0
+    - dport: 60000:61000
+    - proto: udp
+    - save: True
+    - require:
+      - pkg: iptables
+    - require_in:
+      - iptables: iptables-reject-policy
