@@ -16,3 +16,12 @@ debsums-init:
     - mode: 644
     - require:
       - pkg: debsums
+
+/etc/cron.daily/01debsums-fix:
+  file.managed:
+    - source: salt://core/debsums-fix.sh
+    - user: root
+    - group: root
+    - mode: 755
+    - require:
+      - pkg: debsums
