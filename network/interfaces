@@ -31,6 +31,9 @@ iface {{ iface }} inet6 static
 {%- if ipv6.get('gateway', None) %}
   gateway {{ ipv6['gateway'] }}
 {%- endif %}
+{%- if ipv6.get('mtu', None) %}
+  mtu {{ ipv6['mtu'] }}
+{%- endif %}
   autoconf 0
 {%- if vars.pop('primaryIPv6', False) and salt['pillar.get']('network:dns:ipv6', None) %}
   dns-nameservers {{ pillar['network']['dns']['ipv6']|join(' ') }}
@@ -49,6 +52,9 @@ iface {{ iface }} inet static
   netmask {{ ipv4['netmask'] }}
 {%- if ipv4.get('gateway', None) %}
   gateway {{ ipv4['gateway'] }}
+{%- endif %}
+{%- if ipv4.get('mtu', None) %}
+  mtu {{ ipv4['mtu'] }}
 {%- endif %}
 {%- if vars.pop('primaryIPv4', False) and salt['pillar.get']('network:dns:ipv4', None) %}
   dns-nameservers {{ pillar['network']['dns']['ipv4']|join(' ') }}
