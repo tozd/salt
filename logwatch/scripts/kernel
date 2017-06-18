@@ -75,6 +75,8 @@ while (defined(my $ThisLine = <STDIN>)) {
       # following now in iptables service
       or ($ThisLine =~ /^Packet log: .*PROTO=/)
       or ($ThisLine =~ /IN=.*OUT=.*SRC=.*DST=.*PROTO=/)
+      # hides false warning: https://bugzilla.redhat.com/show_bug.cgi?id=1351305
+      or ($ThisLine =~ /tag#0 Sense Key : Hardware Error \[current\] \[descriptor\] /)
       ) { # ignore the above strings
    } elsif ( my ($from,$on) = ( $ThisLine =~ /^Warning: possible SYN flood from ([^ ]+) on ([^ ]+):.+ Sending cookies/ ) ) {
       my $Fullfrom = LookupIP($from);
