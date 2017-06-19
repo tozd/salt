@@ -19,9 +19,9 @@ function cleanup {
 trap cleanup EXIT
 
 for package in ${PACKAGES[@]}; do
-  if dpkg-query -W --showformat='${Status}\n' "$package" | grep -q 'install ok installed' ; then
+  if dpkg-query -W --showformat='${Status}\n' "$package" 2>&1 | grep -q 'install ok installed' ; then
     rm -f "$OUTPUT"
-    apt-get --yes --quiet install --reinstall "$package" 2>&1 > "$OUTPUT"
+    apt-get --yes --quiet install --reinstall "$package" > "$OUTPUT" 2>&1
     EXIT_STATUS=$?
     if [ $EXIT_STATUS -ne 0 ]; then
       cat "$OUTPUT"
