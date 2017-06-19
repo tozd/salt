@@ -8,6 +8,8 @@
 #
 # It just reinstalls offending packages before debsums runs every day.
 
+export DEBIAN_FRONTEND='noninteractive'
+
 PACKAGES=(module-init-tools libkmod2)
 OUTPUT='/tmp/debsums-fix-output'
 
