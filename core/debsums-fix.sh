@@ -10,7 +10,7 @@
 
 export DEBIAN_FRONTEND='noninteractive'
 
-PACKAGES=(module-init-tools libkmod2)
+PACKAGES=(libkmod2)
 OUTPUT='/tmp/debsums-fix-output'
 
 function cleanup {
