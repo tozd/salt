@@ -393,6 +393,18 @@ for container, cfg in pillar('docker:containers', {}).items():
     else:
         network_mode = 'bridge'
 
+    properties = {}
+
+    # Determine hostname. Setting a hostname is incompatible with container network mode.
+    if not network_mode.startswith('container:'):
+        if network_name and not '.' in container:
+            # Construct a FQDN.
+            hostname = container + '.' + network_name
+        else:
+            hostname = container
+
+        properties['hostname'] = hostname
+
     capabilities_add = []
     capabilities_drop = []
     for capability in cfg.get('capabilities', []):
@@ -404,6 +416,11 @@ for container, cfg in pillar('docker:containers', {}).items():
         else:
             capabilities_add.append(capability)
 
+    if capabilities_add:
+        properties['cap_add'] = capabilities_add
+    if capabilities_drop:
+        properties['cap_drop'] = capabilities_drop
+
     # TODO: This should depend on the Docker version on the minion.
     #       If < 1.9 then it should be "always". But it seems there is no way to know the version so we use a proxy,
     #       the Ubuntu version name, because on trusty we install Docker 1.8.
@@ -413,23 +430,14 @@ for container, cfg in pillar('docker:containers', {}).items():
     else:
         restart_policy = 'unless-stopped'
 
-    if network_name and not '.' in container:
-        # Construct a FQDN.
-        hostname = container + '.' + network_name
-    else:
-        hostname = container
-
     docker_container = state(
         Docker, 'running',
         '%s-container' % container,
         name=container,
-        hostname=hostname,
         image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
         environment=environment,
         port_bindings=port_bindings,
         memory=resources.get('memory', 0),
-        cap_add=capabilities_add,
-        cap_drop=capabilities_drop,
         privileged=cfg.get('privileged', False),
         network_mode=network_mode,
         binds=binds,
@@ -437,6 +445,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         restart_policy=restart_policy,
         require=requires,
         watch=watches,
+        **properties
     )
 
     # Setup required networks on the host
