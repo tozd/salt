@@ -286,7 +286,12 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     # Setup required ports
     port_bindings = []
-    for port_def, port_bind in cfg.get('ports', {}).items():
+    # We also allow ports to be a list of port_def, port_bind pairs
+    # to support binding the same port to multiple IPs/ports.
+    ports = cfg.get('ports', {})
+    if isinstane(ports, dict):
+        ports = ports.items()
+    for port_def, port_bind in ports:
         port_bind['ip'] = resolve(port_bind['ip'])
 
         port_bindings.append("%s:%s:%s" % (port_bind['ip'], port_bind['port'], port_def))
