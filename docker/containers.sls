@@ -286,11 +286,13 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     # Setup required ports
     port_bindings = []
-    # We also allow ports to be a list of port_def, port_bind pairs
+    # We also allow ports to be a list of {port_def: port_bind} dicts
     # to support binding the same port to multiple IPs/ports.
     ports = cfg.get('ports', {})
     if isinstane(ports, dict):
         ports = ports.items()
+    else:
+        ports = [one_port for port in ports for one_port in port.items()]
     for port_def, port_bind in ports:
         port_bind['ip'] = resolve(port_bind['ip'])
 
