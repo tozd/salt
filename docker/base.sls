@@ -6,9 +6,42 @@ ca-certificates:
   pkg.latest:
     - refresh: True
 
+{% if salt['pillar.get']('docker:release', None) == 'docker-ce' %}
+
+docker-package:
+  pkg.removed:
+    - name: docker
+
+docker-engine-unhold:
+  cmd.run:
+    - name: apt-mark unhold docker-engine
+
+docker-engine:
+  pkg.removed:
+    - require:
+      - cmd: docker-engine-unhold
+
+docker.io:
+  pkg.removed
+
 docker-repository:
   pkgrepo.managed:
-    - humanname: Docker
+    - name: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    - file: /etc/apt/sources.list.d/docker-repository.list
+    - key_url: https://download.docker.com/linux/ubuntu/gpg
+    - require_in:
+      - pkg: docker-ce
+
+docker-ce:
+  pkg.installed:
+    - version: 17.09.1~ce-0~ubuntu
+    - refresh: True
+    - hold: True
+
+{% else %}
+
+docker-repository:
+  pkgrepo.managed:
     {% if grains['oscodename'] == 'xenial' %}
     - name: deb https://apt.dockerproject.org/repo ubuntu-xenial main
     {% elif grains['oscodename'] == 'trusty' %}
@@ -21,7 +54,6 @@ docker-repository:
 
 docker-engine:
   pkg.installed:
-    - name: docker-engine
     {% if grains['oscodename'] == 'xenial' %}
     - version: 1.12.5-0~ubuntu-xenial
     {% elif grains['oscodename'] == 'trusty' %}
@@ -29,6 +61,8 @@ docker-engine:
     {% endif %}
     - refresh: True
     - hold: True
+
+{% endif %}
 
 docker-py:
   pip.installed:
@@ -93,7 +127,11 @@ docker-configuration-file:
     - mode: 644
     - makedirs: True
     - require:
+      {% if salt['pillar.get']('docker:release', None) == 'docker-ce' %}
+      - pkg: docker-ce
+      {% else %}
       - pkg: docker-engine
+      {% endif %}
 
 docker:
   service.running:
