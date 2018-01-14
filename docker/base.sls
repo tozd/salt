@@ -34,9 +34,7 @@ docker-repository:
 
 docker-ce:
   pkg.installed:
-    - version: 17.09.1~ce-0~ubuntu
     - refresh: True
-    - hold: True
 
 {% else %}
 
