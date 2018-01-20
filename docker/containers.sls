@@ -286,6 +286,7 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     # Setup required ports
     port_bindings = []
+    exposed_ports = []
     # We also allow ports to be a list of {port_def: port_bind} dicts
     # to support binding the same port to multiple IPs/ports.
     ports = cfg.get('ports', {})
@@ -294,6 +295,12 @@ for container, cfg in pillar('docker:containers', {}).items():
     else:
         ports = [one_port for port in ports for one_port in port.items()]
     for port_def, port_bind in ports:
+        if port_def not in exposed_ports:
+            exposed_ports.append(port_def)
+
+        if not port_bind:
+            continue
+
         port_bind['ip'] = resolve(port_bind['ip'])
 
         port_bindings.append("%s:%s:%s" % (port_bind['ip'], port_bind['port'], port_def))
@@ -450,6 +457,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
         environment=environment,
         port_bindings=port_bindings,
+        ports=exposed_ports,
         memory=resources.get('memory', 0),
         privileged=cfg.get('privileged', False),
         network_mode=network_mode,
