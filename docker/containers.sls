@@ -201,14 +201,7 @@ for container, cfg in pillar('docker:containers', {}).items():
             read_flag = 'ro'
         else:
             read_flag = 'rw'
-
-        if isinstance(vol_cfg['bind'], list):
-            vol_binds = vol_cfg['bind']
-        else:
-            vol_binds = [vol_cfg['bind']]
-
-        for bind in vol_binds:
-            binds.append("%s:%s:%s" % (vol_name, bind, read_flag))
+        binds.append("%s:%s:%s" % (vol_name, vol_cfg['bind'], read_flag))
 
         vol_type = vol_cfg.get('type', 'directory')
         if vol_type == 'directory':
