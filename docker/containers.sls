@@ -306,18 +306,19 @@ for container, cfg in pillar('docker:containers', {}).items():
         port_bindings.append("%s:%s:%s" % (port_bind['ip'], port_bind['port'], port_def))
 
         proto = 'udp' if 'udp' in port_def else 'tcp'
+        dport = port_bind['port'].replace('-', ':')
 
         # Default policy for this ip/port is DROP
         firewall = state(
             Iptables, 'append',
-            '%s-container-port-dn-drop-%s-%s-%s' % (container, port_bind['ip'], port_bind['port'], proto),
+            '%s-container-port-dn-drop-%s-%s-%s' % (container, port_bind['ip'], dport, proto),
             **{
                 'table': 'mangle',
                 'chain': 'TOZD_DOCKER_BINDS',
                 'jump': 'MARK',
                 'set-mark': DOCKER_MARK_DROP,
                 'destination': '%s/32' % port_bind['ip'],
-                'dport': port_bind['port'],
+                'dport': dport,
                 'proto': proto,
                 'save': True,
                 'require': Pkg('iptables'),
@@ -330,13 +331,13 @@ for container, cfg in pillar('docker:containers', {}).items():
         for source in sources:
             firewall = state(
                 Iptables, 'append',
-                '%s-container-port-dp-%s-%s-%s-%s' % (container, port_bind['ip'], port_bind['port'], proto, source),
+                '%s-container-port-dp-%s-%s-%s-%s' % (container, port_bind['ip'], dport, proto, source),
                 table='filter',
                 chain='INPUT',
                 jump='ACCEPT',
                 source=source,
                 destination='%s/32' % port_bind['ip'],
-                dport=port_bind['port'],
+                dport=dport,
                 proto=proto,
                 save=True,
                 require=Pkg('iptables'),
@@ -346,7 +347,7 @@ for container, cfg in pillar('docker:containers', {}).items():
             # Mark incoming packets to support Docker NAT (without docker-proxy)
             firewall = state(
                 Iptables, 'append',
-                '%s-container-port-dn-%s-%s-%s-%s' % (container, port_bind['ip'], port_bind['port'], proto, source),
+                '%s-container-port-dn-%s-%s-%s-%s' % (container, port_bind['ip'], dport, proto, source),
                 **{
                     'table': 'mangle',
                     'chain': 'TOZD_DOCKER_BINDS',
@@ -354,7 +355,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                     'set-mark': DOCKER_MARK_ACCEPT,
                     'source': source,
                     'destination': '%s/32' % port_bind['ip'],
-                    'dport': port_bind['port'],
+                    'dport': dport,
                     'proto': proto,
                     'save': True,
                     'require': Pkg('iptables'),
