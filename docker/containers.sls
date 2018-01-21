@@ -306,7 +306,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         port_bindings.append("%s:%s:%s" % (port_bind['ip'], port_bind['port'], port_def))
 
         proto = 'udp' if 'udp' in port_def else 'tcp'
-        dport = port_bind['port'].replace('-', ':')
+        dport = str(port_bind['port']).replace('-', ':')
 
         # Default policy for this ip/port is DROP
         firewall = state(
