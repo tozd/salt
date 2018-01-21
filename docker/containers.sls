@@ -451,6 +451,9 @@ for container, cfg in pillar('docker:containers', {}).items():
     if command:
         properties['command'] = command
 
+    if exposed_ports:
+       properties['ports'] = exposed_ports
+
     docker_container = state(
         Docker, 'running',
         '%s-container' % container,
@@ -458,7 +461,6 @@ for container, cfg in pillar('docker:containers', {}).items():
         image='%s:%s' % (cfg['image'], cfg.get('tag', 'latest')),
         environment=environment,
         port_bindings=port_bindings,
-        ports=exposed_ports,
         memory=resources.get('memory', 0),
         privileged=cfg.get('privileged', False),
         network_mode=network_mode,
