@@ -18,7 +18,7 @@ screenrc-block:
     - content: |
         startup_message off
         defobuflimit 2048
-        termcapinfo xterm|xterms|xs|rxvt ti@:te@
+        termcapinfo xterm*|xs|rxvt* ti@:te@
     - append_if_not_found: True
     - require:
       - pkg: screen
