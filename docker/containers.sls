@@ -308,6 +308,11 @@ for container, cfg in pillar('docker:containers', {}).items():
         proto = 'udp' if 'udp' in port_def else 'tcp'
         dport = str(port_bind['port']).replace('-', ':')
 
+        if ':' in dport:
+            dport_key = 'dports'
+        else:
+            dport_key = 'dport'
+
         # Default policy for this ip/port is DROP
         firewall = state(
             Iptables, 'append',
@@ -318,7 +323,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                 'jump': 'MARK',
                 'set-mark': DOCKER_MARK_DROP,
                 'destination': '%s/32' % port_bind['ip'],
-                'dport': dport,
+                dport_key: dport,
                 'proto': proto,
                 'save': True,
                 'require': Pkg('iptables'),
@@ -332,15 +337,17 @@ for container, cfg in pillar('docker:containers', {}).items():
             firewall = state(
                 Iptables, 'append',
                 '%s-container-port-dp-%s-%s-%s-%s' % (container, port_bind['ip'], dport, proto, source),
-                table='filter',
-                chain='INPUT',
-                jump='ACCEPT',
-                source=source,
-                destination='%s/32' % port_bind['ip'],
-                dport=dport,
-                proto=proto,
-                save=True,
-                require=Pkg('iptables'),
+                **{
+                    'table': 'filter',
+                    'chain': 'INPUT',
+                    'jump': 'ACCEPT',
+                    'source': source,
+                    'destination': '%s/32' % port_bind['ip'],
+                    dport_key: dport,
+                    'proto': proto,
+                    'save': True,
+                    'require': Pkg('iptables'),
+                }
             )
             requires.append(firewall)
 
@@ -355,7 +362,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                     'set-mark': DOCKER_MARK_ACCEPT,
                     'source': source,
                     'destination': '%s/32' % port_bind['ip'],
-                    'dport': dport,
+                    dport_key: dport,
                     'proto': proto,
                     'save': True,
                     'require': Pkg('iptables'),
