@@ -15,7 +15,6 @@ iface lo inet loopback
 # External interfaces
 {%- for iface, cfg in salt['pillar.get']('network:interfaces', {}).items() %}
 auto {{ iface }}
-{%- set vars = {'primaryIPv4': true, 'primaryIPv6': true} -%}
 
 {%- set addresses = cfg.get('ipv6', []) -%}
 {%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
@@ -35,7 +34,7 @@ iface {{ iface }} inet6 static
   mtu {{ ipv6['mtu'] }}
 {%- endif %}
   autoconf 0
-{%- if vars.pop('primaryIPv6', False) and salt['pillar.get']('network:dns:ipv6', None) %}
+{%- if salt['pillar.get']('network:dns:ipv6', None) %}
   dns-nameservers {{ pillar['network']['dns']['ipv6']|join(' ') }}
 {%- endif %}
 {%- endif %}
@@ -56,7 +55,7 @@ iface {{ iface }} inet static
 {%- if ipv4.get('mtu', None) %}
   mtu {{ ipv4['mtu'] }}
 {%- endif %}
-{%- if vars.pop('primaryIPv4', False) and salt['pillar.get']('network:dns:ipv4', None) %}
+{%- if salt['pillar.get']('network:dns:ipv4', None) %}
   dns-nameservers {{ pillar['network']['dns']['ipv4']|join(' ') }}
 {%- endif %}
 {%- endif %}
