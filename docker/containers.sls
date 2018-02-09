@@ -419,8 +419,8 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     properties = {}
 
-    # Determine hostname. Setting a hostname is incompatible with container network mode.
-    if not network_mode.startswith('container:'):
+    # Determine hostname. Setting a hostname is incompatible with container network and host modes.
+    if not network_mode.startswith('container:') and network_mode != 'host':
         if network_name and not '.' in container:
             # Construct a FQDN.
             hostname = container + '.' + network_name
