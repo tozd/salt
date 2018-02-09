@@ -395,7 +395,7 @@ for container, cfg in pillar('docker:containers', {}).items():
 
     network_name = None
     network_mode = cfg.get('network_mode', None)
-    if network_mode is not None:
+    if network_mode is not None and not isinstance(network_mode, str):
         if network_mode.get('type', None) == 'container':
             requires.append(Docker('%s-container' % network_mode['container']))
             network_mode = 'container:%s' % network_mode['container']
