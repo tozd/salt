@@ -5,17 +5,21 @@ function getName {
   local pid="$1"
 
   if [[ -z "$pid" ]]; then
-    echo "Missing host PID argument."
+    >&2 echo "Missing host PID argument."
     exit 1
   fi
 
   if [ "$pid" -eq "1" ]; then
-    echo "Unable to resolve host PID to a container name."
+    >&2 echo "Unable to resolve host PID to a container name."
     exit 2
   fi
 
   # ps returns values potentially padded with spaces, so we pass them as they are without quoting.
   local parentPid="$(ps -o ppid= -p $pid)"
+  if [[ -z "$parentPid" ]]; then
+    >&2 echo "Unable to resolve host PID to a container name."
+    exit 2
+  fi
   local containerId="$(ps -o args= -f -p $parentPid | grep docker-containerd-shim | cut -d ' ' -f 2)"
 
   if [[ -n "$containerId" ]]; then
