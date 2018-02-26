@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:$PATH"
+
 # Programs in Docker containers sometimes hang with an error like:
 #  svlogd: pausing: unable to rename current: /var/log/mongod: access denied
 # This script tries to find such programs and restarts their containers.
