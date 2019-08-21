@@ -122,7 +122,7 @@ for container, cfg in pillar('docker:containers', {}).items():
         '%s-image' % container,
         name="%s:%s" % (cfg['image'], cfg.get('tag', 'latest')),
         # Pull image even if already present.
-        force=True,
+        force=cfg.get('always_pull', True),
         require=Sls('docker.base'),
     )
 
