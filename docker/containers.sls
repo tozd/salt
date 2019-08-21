@@ -11,7 +11,6 @@ Iptables = pyobjects.StateFactory('iptables')
 Kmod = pyobjects.StateFactory('kmod')
 Pkg = pyobjects.StateFactory('pkg')
 
-
 def state(_cls, _func, _id, **kwargs):
     from salt.utils import pyobjects
 
