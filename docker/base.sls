@@ -41,11 +41,11 @@ docker-ce:
 docker-repository:
   pkgrepo.managed:
     {% if grains['oscodename'] == 'xenial' %}
-    - name: deb https://apt.dockerproject.org/repo ubuntu-xenial main
+    - name: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
     {% elif grains['oscodename'] == 'trusty' %}
-    - name: deb https://apt.dockerproject.org/repo ubuntu-trusty main
+    - name: deb [arch=amd64] https://download.docker.com/linux/ubuntu trusty stable
     {% endif %}
-    - keyid: 58118E89F3A912897C070ADBF76221572C52609D
+    - keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
     - keyserver: keyserver.ubuntu.com
     - require_in:
       - pkg: docker-engine
