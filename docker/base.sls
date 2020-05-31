@@ -15,6 +15,7 @@ docker-package:
 docker-engine-unhold:
   cmd.run:
     - name: apt-mark unhold docker-engine
+    - onlyif: dpkg -s docker-engine
 
 docker-engine:
   pkg.removed:
