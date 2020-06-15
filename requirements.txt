@@ -9,7 +9,7 @@ msgpack-python==0.5.1
 pycrypto==2.6.1
 PyYAML==3.12
 pyzmq==16.0.3
-requests==2.18.4
+requests==2.20.0
 salt==2017.7.2
 singledispatch==3.4.0.3
 six==1.11.0
