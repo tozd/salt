@@ -36,38 +36,39 @@ net.ipv4.conf.default.rp_filter:
 sysfsutils:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
+
+sysfsutils-service:
   service.running:
-    - require:
+    - name: sysfsutils
+    - enable: True
+    - watch:
       - pkg: sysfsutils
 
 htop:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 iotop:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 sysstat:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
-iptraf:
+iptraf-ng:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 tcpdump:
   pkg.latest:
     - refresh: True
-
-python-gnupg:
-  pkg.latest:
-    - refresh: True
-    - reload_modules: True
-
-python-apt:
-  pkg.latest:
-    - refresh: True
+    - cache_valid_time: 600
 
 inputrc-history:
   file.blockreplace:
@@ -87,4 +88,3 @@ include:
   - .vim
   - .upgrades
   - .debsums
-  - .msgpack

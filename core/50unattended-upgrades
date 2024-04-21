@@ -1,3 +1,9 @@
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
 Unattended-Upgrade::Allowed-Origins {
   "${distro_id}:${distro_codename}-security";
+  "${distro_id}ESMApps:${distro_codename}-apps-security";
+  "${distro_id}ESM:${distro_codename}-infra-security";
 };

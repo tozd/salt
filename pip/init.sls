@@ -1,11 +1,13 @@
 python-setuptools:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 {% if grains['oscodename'] == 'xenial' %}
 python-pip:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
     - reload_modules: True
 {% elif grains['oscodename'] == 'trusty' %}
 python-pip-package:

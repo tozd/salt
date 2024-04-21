@@ -1,15 +1,7 @@
 smartmontools:
   pkg.latest:
     - refresh: True
-
-/etc/default/smartmontools:
-  file.managed:
-    - source: salt://smart/smartmontools.conf
-    - user: root
-    - group: root
-    - mode: 644
-    - require:
-      - pkg: smartmontools
+    - cache_valid_time: 600
 
 /etc/smartd.conf:
   file.managed:
@@ -24,7 +16,7 @@ smartmontools:
 smartmontools-service:
   service.running:
     - name: smartmontools
+    - enable: True
     - watch:
-      - file: /etc/default/smartmontools
+      - pkg: smartmontools
       - file: /etc/smartd.conf
-

@@ -4,9 +4,10 @@ iptables:
       - iptables
       - iptables-persistent
     - refresh: True
+    - cache_valid_time: 600
     - reload_modules: True
 
-iptables-allow-localhost-1:
+iptables-allow-localhost-ipv4-1:
   iptables.append:
     - table: filter
     - chain: INPUT
@@ -16,7 +17,18 @@ iptables-allow-localhost-1:
     - require:
       - pkg: iptables
 
-iptables-allow-localhost-2:
+iptables-allow-localhost-ipv6-1:
+  iptables.append:
+    - table: filter
+    - family: ipv6
+    - chain: INPUT
+    - jump: ACCEPT
+    - source: '::1'
+    - save: True
+    - require:
+      - pkg: iptables
+
+iptables-allow-localhost-ipv4-2:
   iptables.append:
     - table: filter
     - chain: INPUT
@@ -26,7 +38,18 @@ iptables-allow-localhost-2:
     - require:
       - pkg: iptables
 
-iptables-allow-established:
+iptables-allow-localhost-ipv6-2:
+  iptables.append:
+    - table: filter
+    - family: ipv6
+    - chain: INPUT
+    - jump: ACCEPT
+    - if: lo
+    - save: True
+    - require:
+      - pkg: iptables
+
+iptables-allow-established-ipv4:
   iptables.append:
     - table: filter
     - chain: INPUT
@@ -37,13 +60,35 @@ iptables-allow-established:
     - require:
       - pkg: iptables
 
-iptables-allow-icmp:
+iptables-allow-established-ipv6:
+  iptables.append:
+    - table: filter
+    - family: ipv6
+    - chain: INPUT
+    - jump: ACCEPT
+    - match: conntrack
+    - ctstate: 'RELATED,ESTABLISHED'
+    - save: True
+    - require:
+      - pkg: iptables
+
+iptables-allow-icmp-ipv4:
   iptables.append:
     - table: filter
     - chain: INPUT
     - jump: ACCEPT
-    - source: 0.0.0.0/0
     - proto: icmp
+    - save: True
+    - require:
+      - pkg: iptables
+
+iptables-allow-icmp-ipv6:
+  iptables.append:
+    - table: filter
+    - family: ipv6
+    - chain: INPUT
+    - jump: ACCEPT
+    - proto: ipv6-icmp
     - save: True
     - require:
       - pkg: iptables
@@ -54,6 +99,9 @@ iptables-reject-policy:
     - chain: INPUT
     - policy: DROP
     - require:
-      - iptables: iptables-allow-localhost-1
-      - iptables: iptables-allow-localhost-2
-      - iptables: iptables-allow-established
+      - iptables: iptables-allow-localhost-ipv4-1
+      - iptables: iptables-allow-localhost-ipv6-1
+      - iptables: iptables-allow-localhost-ipv4-2
+      - iptables: iptables-allow-localhost-ipv6-2
+      - iptables: iptables-allow-established-ipv4
+      - iptables: iptables-allow-established-ipv6

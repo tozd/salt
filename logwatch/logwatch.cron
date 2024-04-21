@@ -1,3 +1,9 @@
-# Managed by Salt.
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
 
-4 * * * * root	/usr/sbin/logwatch --output stdout --service zz-empty_space --service kernel --range 'since 1 hour ago for that hour'
+kernel_ignore_messages="tag#0 Sense Key : Hardware Error"
+df_options="-h -l -x tmpfs -x overlay"
+
+4 * * * * root	/usr/sbin/logwatch --output stdout --service zz-disk_space --service kernel --range 'since 1 hour ago for that hour'

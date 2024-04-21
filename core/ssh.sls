@@ -1,17 +1,19 @@
 openssh-client:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 openssh-server:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
-ssh:
+sshd-service:
   service.running:
+    - name: ssh
     - enable: True
-    - require:
-      - pkg: openssh-server
     - watch:
+      - pkg: openssh-server
       - file: /etc/ssh/sshd_config
 
 sshd-keepalive-client:
@@ -29,21 +31,16 @@ sshd-keepalive-client:
 sshd-keepalive-tcp:
   file.replace:
     - name: /etc/ssh/sshd_config
-    - pattern: "^TCPKeepAlive yes"
+    - pattern: "^#?TCPKeepAlive yes"
     - repl: TCPKeepAlive no
     - require:
       - pkg: openssh-server
 
-mosh:
-  pkg.latest:
-    - refresh: True
-
-iptables-ssh-policy:
+iptables-sshd-policy-ipv4:
   iptables.append:
     - table: filter
     - chain: INPUT
     - jump: ACCEPT
-    - source: 0.0.0.0/0
     - dport: ssh
     - proto: tcp
     - save: True
@@ -52,14 +49,14 @@ iptables-ssh-policy:
     - require_in:
       - iptables: iptables-reject-policy
 
-iptables-mosh-policy:
+iptables-sshd-policy-ipv6:
   iptables.append:
     - table: filter
+    - family: ipv6
     - chain: INPUT
     - jump: ACCEPT
-    - source: 0.0.0.0/0
-    - dport: 60000:61000
-    - proto: udp
+    - dport: ssh
+    - proto: tcp
     - save: True
     - require:
       - pkg: iptables

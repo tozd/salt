@@ -1,10 +1,12 @@
 apt-transport-https:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 ca-certificates:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 {% if salt['pillar.get']('docker:release', None) == 'docker-ce' %}
 
@@ -36,6 +38,7 @@ docker-repository:
 docker-ce:
   pkg.installed:
     - refresh: True
+    - cache_valid_time: 600
 
 {% else %}
 
@@ -59,6 +62,7 @@ docker-engine:
     - version: 1.8.3-0~trusty
     {% endif %}
     - refresh: True
+    - cache_valid_time: 600
     - hold: True
 
 {% endif %}
@@ -77,35 +81,7 @@ docker-compose:
     - require:
       - sls: pip
 
-/srv/docker:
-  file.directory:
-    - user: root
-    - group: root
-    - mode: 700
-    - makedirs: True
-
-/srv/tmp/docker:
-  file.directory:
-    - user: root
-    - group: root
-    - mode: 700
-    - makedirs: True
-
 /srv/log:
-  file.directory:
-    - user: root
-    - group: root
-    - mode: 700
-    - makedirs: True
-
-/srv/repositories:
-  file.directory:
-    - user: root
-    - group: root
-    - mode: 700
-    - makedirs: True
-
-/srv/storage:
   file.directory:
     - user: root
     - group: root
@@ -139,6 +115,7 @@ docker:
       - file: /srv/tmp/docker
       - file: /srv/log
       - file: /srv/repositories
+      - file: /srv/storage
     - watch:
       - file: docker-configuration-file
 
@@ -149,11 +126,5 @@ docker-available:
     - require:
       - service: docker
 
-container-from-pid:
-  file.managed:
-    - name: /usr/local/bin/container-from-pid
-    - source: salt://docker/container-from-pid.sh
-    - user: root
-    - group: root
-    - mode: 755
-    - makedirs: True
+include:
+  - .files

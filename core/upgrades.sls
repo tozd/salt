@@ -1,10 +1,20 @@
 unattended-upgrades:
   pkg.latest:
     - refresh: True
+    - cache_valid_time: 600
 
 /etc/apt/apt.conf.d/20auto-upgrades:
   file.managed:
     - source: salt://core/20auto-upgrades
+    - user: root
+    - group: root
+    - mode: 644
+    - require:
+      - pkg: unattended-upgrades
+
+/etc/apt/apt.conf.d/20auto-clean:
+  file.managed:
+    - source: salt://core/20auto-clean
     - user: root
     - group: root
     - mode: 644
@@ -19,4 +29,3 @@ unattended-upgrades:
     - mode: 644
     - require:
       - pkg: unattended-upgrades
-

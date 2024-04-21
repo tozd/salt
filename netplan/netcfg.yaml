@@ -1,0 +1,39 @@
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
+
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+{%- for iface, cfg in salt['pillar.get']('network:interfaces', {}).items() %}
+    {{ iface }}:
+      addresses:
+{%- set addresses = cfg.get('ipv4', []) -%}
+{%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
+{%- for ipv4 in addresses %}
+        - {{ ipv4['address'] }}/{{ ipv4.get('prefix', '32') }}
+{%- endfor %}
+{%- set addresses = cfg.get('ipv6', []) -%}
+{%- if addresses is mapping %}{% set addresses = addresses.values() %}{% endif -%}
+{%- for ipv6 in addresses %}
+        - {{ ipv6['address'] }}/{{ ipv6.get('prefix', '128') }}
+{%- endfor %}
+      routes:
+        - on-link: true
+          to: 0.0.0.0/0
+          via: {{ pillar['network']['gateway']['ipv4'] }}
+{%- if salt['pillar.get']('network:gateway:ipv6', None) %}
+        - to: default
+          via: {{ pillar['network']['gateway']['ipv6'] }}
+{%- endif %}
+      nameservers:
+        addresses:
+{%- for ipv4 in salt['pillar.get']('network:dns:ipv4', []) %}
+          - {{ ipv4 }}
+{%- endfor %}
+{%- for ipv6 in salt['pillar.get']('network:dns:ipv6', []) %}
+          - {{ ipv6 }}
+{%- endfor %}
+{%- endfor %}
