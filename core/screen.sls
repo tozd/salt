@@ -1,6 +1,6 @@
 screen:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 screenrc-scrollback:
@@ -20,6 +20,6 @@ screenrc-block:
         startup_message off
         defobuflimit 2048
         termcapinfo xterm*|xs|rxvt* ti@:te@
-    - append_if_not_found: True
+    - append_if_not_found: true
     - require:
       - pkg: screen

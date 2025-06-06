@@ -1,6 +1,6 @@
 unattended-upgrades:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 /etc/apt/apt.conf.d/20auto-upgrades:

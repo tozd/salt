@@ -1,11 +1,11 @@
 systemd-timesyncd:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 systemd-timesyncd-service:
   service.running:
     - name: systemd-timesyncd
-    - enable: True
+    - enable: true
     - watch:
       - pkg: systemd-timesyncd

@@ -1,6 +1,6 @@
 debsums:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 /etc/default/debsums:

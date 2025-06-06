@@ -1,6 +1,6 @@
 logwatch:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 /etc/logwatch/conf/logwatch.conf:

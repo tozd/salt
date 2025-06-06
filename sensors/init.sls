@@ -1,4 +1,4 @@
 lm-sensors:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600

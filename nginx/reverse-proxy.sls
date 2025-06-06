@@ -2,7 +2,7 @@ single-host-reverse-proxy-image:
   docker.pulled:
     - name: tozd/nginx-proxy
     - tag: latest
-    - force: True
+    - force: true
     - require:
       - sls: docker.base
 
@@ -11,42 +11,42 @@ single-host-reverse-proxy-image:
     - user: root
     - group: root
     - mode: 755
-    - makedirs: True
+    - makedirs: true
 
 /srv/nginx/dockergen:
   file.directory:
     - user: root
     - group: root
     - mode: 755
-    - makedirs: True
+    - makedirs: true
 
 /srv/nginx/letsencrypt:
   file.directory:
     - user: root
     - group: root
     - mode: 755
-    - makedirs: True
+    - makedirs: true
 
 /srv/nginx/dnsmasq:
   file.directory:
     - user: root
     - group: root
     - mode: 755
-    - makedirs: True
+    - makedirs: true
 
 /srv/nginx/ssl:
   file.directory:
     - user: root
     - group: root
     - mode: 701
-    - makedirs: True
+    - makedirs: true
 
 /srv/nginx/sites:
   file.directory:
     - user: root
     - group: root
     - mode: 700
-    - makedirs: True
+    - makedirs: true
 
 single-host-reverse-proxy-container:
   docker.running:
@@ -100,6 +100,6 @@ iptables-single-host-reverse-proxy-policy:
       - 80
       - 443
     - proto: tcp
-    - save: True
+    - save: true
     - require:
       - pkg: iptables

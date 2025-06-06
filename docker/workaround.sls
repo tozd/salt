@@ -5,7 +5,7 @@ log-rotate-workaround:
     - user: root
     - group: root
     - mode: 755
-    - makedirs: True
+    - makedirs: true
     - require:
       - file: container-from-pid
 

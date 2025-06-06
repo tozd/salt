@@ -1,17 +1,17 @@
 openssh-client:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 openssh-server:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 sshd-service:
   service.running:
     - name: ssh
-    - enable: True
+    - enable: true
     - watch:
       - pkg: openssh-server
       - file: /etc/ssh/sshd_config
@@ -24,7 +24,7 @@ sshd-keepalive-client:
     - content: |
         ClientAliveInterval 60
         ClientAliveCountMax 15
-    - append_if_not_found: True
+    - append_if_not_found: true
     - require:
       - pkg: openssh-server
 
@@ -43,7 +43,7 @@ iptables-sshd-policy-ipv4:
     - jump: ACCEPT
     - dport: ssh
     - proto: tcp
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
     - require_in:
@@ -57,7 +57,7 @@ iptables-sshd-policy-ipv6:
     - jump: ACCEPT
     - dport: ssh
     - proto: tcp
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
     - require_in:

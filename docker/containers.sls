@@ -139,7 +139,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                 'bind': '/etc/hosts',
                 'type': 'container',
                 'container': dh_container,
-                'readonly': True,
+                'readonly': true,
             }
 
     # Create the required configs
@@ -185,7 +185,7 @@ for container, cfg in pillar('docker:containers', {}).items():
     if cfg.get('image', '') in ['tozd/ubuntu-systemd', 'tozd/ubuntu-user']:
         cfg['volumes']['/srv/tmp/systemd-cgroup'] = {
             'bind': '/sys/fs/cgroup',
-            'readonly': True,
+            'readonly': true,
         }
         cfg['volumes']['/srv/tmp/%s/run' % container] = {
             'bind': '/run',
@@ -326,7 +326,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                 'destination': '%s/32' % port_bind['ip'],
                 dport_key: dport,
                 'proto': proto,
-                'save': True,
+                'save': true,
                 'require': Pkg('iptables'),
             }
         )
@@ -346,7 +346,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                     'destination': '%s/32' % port_bind['ip'],
                     dport_key: dport,
                     'proto': proto,
-                    'save': True,
+                    'save': true,
                     'require': Pkg('iptables'),
                 }
             )
@@ -365,7 +365,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                     'destination': '%s/32' % port_bind['ip'],
                     dport_key: dport,
                     'proto': proto,
-                    'save': True,
+                    'save': true,
                     'require': Pkg('iptables'),
                 }
             )

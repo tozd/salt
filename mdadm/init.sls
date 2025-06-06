@@ -1,6 +1,6 @@
 mdadm:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
     - require:
       - sls: mailer
@@ -8,6 +8,6 @@ mdadm:
 mdadm-service:
   service.running:
     - name: mdmonitor
-    - enable: True
+    - enable: true
     - watch:
       - pkg: mdadm

@@ -3,9 +3,9 @@ iptables:
     - pkgs:
       - iptables
       - iptables-persistent
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
-    - reload_modules: True
+    - reload_modules: true
 
 iptables-allow-localhost-ipv4-1:
   iptables.append:
@@ -13,7 +13,7 @@ iptables-allow-localhost-ipv4-1:
     - chain: INPUT
     - jump: ACCEPT
     - source: 127.0.0.1/8
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 
@@ -24,7 +24,7 @@ iptables-allow-localhost-ipv6-1:
     - chain: INPUT
     - jump: ACCEPT
     - source: '::1'
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 
@@ -34,7 +34,7 @@ iptables-allow-localhost-ipv4-2:
     - chain: INPUT
     - jump: ACCEPT
     - if: lo
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 
@@ -45,7 +45,7 @@ iptables-allow-localhost-ipv6-2:
     - chain: INPUT
     - jump: ACCEPT
     - if: lo
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 
@@ -56,7 +56,7 @@ iptables-allow-established-ipv4:
     - jump: ACCEPT
     - match: conntrack
     - ctstate: 'RELATED,ESTABLISHED'
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 
@@ -68,7 +68,7 @@ iptables-allow-established-ipv6:
     - jump: ACCEPT
     - match: conntrack
     - ctstate: 'RELATED,ESTABLISHED'
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 
@@ -78,7 +78,7 @@ iptables-allow-icmp-ipv4:
     - chain: INPUT
     - jump: ACCEPT
     - proto: icmp
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 
@@ -89,7 +89,7 @@ iptables-allow-icmp-ipv6:
     - chain: INPUT
     - jump: ACCEPT
     - proto: ipv6-icmp
-    - save: True
+    - save: true
     - require:
       - pkg: iptables
 

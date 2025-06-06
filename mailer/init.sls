@@ -1,12 +1,12 @@
 exim4:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 exim4-service:
   service.running:
     - name: exim4
-    - enable: True
+    - enable: true
     - watch:
       - pkg: exim4
 

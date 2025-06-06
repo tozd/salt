@@ -1,11 +1,11 @@
 apt-transport-https:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 ca-certificates:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 {% if salt['pillar.get']('docker:release', None) == 'docker-ce' %}
@@ -37,7 +37,7 @@ docker-repository:
 
 docker-ce:
   pkg.installed:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 {% else %}
@@ -61,16 +61,16 @@ docker-engine:
     {% elif grains['oscodename'] == 'trusty' %}
     - version: 1.8.3-0~trusty
     {% endif %}
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
-    - hold: True
+    - hold: true
 
 {% endif %}
 
 docker-py:
   pip.installed:
     - name: docker-py==1.10.6
-    - reload_modules: True
+    - reload_modules: true
     - require:
       - sls: pip
 
@@ -86,7 +86,7 @@ docker-compose:
     - user: root
     - group: root
     - mode: 700
-    - makedirs: True
+    - makedirs: true
 
 docker-configuration-file:
   file.managed:
@@ -100,7 +100,7 @@ docker-configuration-file:
     - user: root
     - group: root
     - mode: 644
-    - makedirs: True
+    - makedirs: true
     - require:
       {% if salt['pillar.get']('docker:release', None) == 'docker-ce' %}
       - pkg: docker-ce

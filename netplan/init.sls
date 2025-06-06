@@ -29,7 +29,7 @@ hostname-init:
 
 netplan.io:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 netplan-init:

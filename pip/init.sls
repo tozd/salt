@@ -1,14 +1,14 @@
 python-setuptools:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 {% if grains['oscodename'] == 'xenial' %}
 python-pip:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
-    - reload_modules: True
+    - reload_modules: true
 {% elif grains['oscodename'] == 'trusty' %}
 python-pip-package:
   pkg.purged:
@@ -21,5 +21,5 @@ python-pip:
     - require:
       - pkg: python-pip-package
       - pkg: python-setuptools
-    - reload_modules: True
+    - reload_modules: true
 {% endif %}

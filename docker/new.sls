@@ -1,6 +1,6 @@
 docker.io:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
     - require:
       - file: docker-configuration-file
@@ -8,14 +8,14 @@ docker.io:
 
 docker-buildx:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 python3-docker:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
-    - reload_modules: True
+    - reload_modules: true
 
 docker-configuration-file:
   file.managed:
@@ -24,7 +24,7 @@ docker-configuration-file:
     - user: root
     - group: root
     - mode: 644
-    - makedirs: True
+    - makedirs: true
 
 docker-service-file:
   file.managed:
@@ -33,12 +33,12 @@ docker-service-file:
     - user: root
     - group: root
     - mode: 644
-    - makedirs: True
+    - makedirs: true
 
 docker-service:
   service.running:
     - name: docker
-    - enable: True
+    - enable: true
     - require:
       - file: /srv/docker
       - file: /srv/tmp/docker

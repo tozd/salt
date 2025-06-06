@@ -35,39 +35,39 @@ net.ipv4.conf.default.rp_filter:
 
 sysfsutils:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 sysfsutils-service:
   service.running:
     - name: sysfsutils
-    - enable: True
+    - enable: true
     - watch:
       - pkg: sysfsutils
 
 htop:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 iotop:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 sysstat:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 iptraf-ng:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 tcpdump:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 inputrc-history:
@@ -78,7 +78,7 @@ inputrc-history:
     - content: |
         "\e[5~": history-search-backward
         "\e[6~": history-search-forward
-    - append_if_not_found: True
+    - append_if_not_found: true
 
 include:
   - .firewall

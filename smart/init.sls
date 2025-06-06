@@ -1,6 +1,6 @@
 smartmontools:
   pkg.latest:
-    - refresh: True
+    - refresh: true
     - cache_valid_time: 600
 
 /etc/smartd.conf:
@@ -16,7 +16,7 @@ smartmontools:
 smartmontools-service:
   service.running:
     - name: smartmontools
-    - enable: True
+    - enable: true
     - watch:
       - pkg: smartmontools
       - file: /etc/smartd.conf

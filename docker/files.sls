@@ -3,28 +3,28 @@
     - user: root
     - group: root
     - mode: 700
-    - makedirs: True
+    - makedirs: true
 
 /srv/tmp/docker:
   file.directory:
     - user: root
     - group: root
     - mode: 700
-    - makedirs: True
+    - makedirs: true
 
 /srv/repositories:
   file.directory:
     - user: root
     - group: root
     - mode: 700
-    - makedirs: True
+    - makedirs: true
 
 /srv/storage:
   file.directory:
     - user: root
     - group: root
     - mode: 700
-    - makedirs: True
+    - makedirs: true
 
 container-from-pid:
   file.managed:
@@ -33,4 +33,4 @@ container-from-pid:
     - user: root
     - group: root
     - mode: 755
-    - makedirs: True
+    - makedirs: true
