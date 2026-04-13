@@ -32,10 +32,18 @@ netplan.io:
     - refresh: true
     - cache_valid_time: 600
 
+netplan-cloud-init-backup:
+  file.rename:
+    - name: /etc/netplan/50-cloud-init.yaml.bak
+    - source: /etc/netplan/50-cloud-init.yaml
+    - onlyif: test -f /etc/netplan/50-cloud-init.yaml
+    - force: true
+
 netplan-init:
   cmd.wait:
     - name: netplan apply
     - require:
       - pkg: netplan.io
+      - file: netplan-cloud-init-backup
     - watch:
       - file: /etc/netplan/01-netcfg.yaml
