@@ -9,5 +9,6 @@ mdadm-service:
   service.running:
     - name: mdmonitor
     - enable: true
+    - onlyif: grep -q '^md' /proc/mdstat
     - watch:
       - pkg: mdadm
