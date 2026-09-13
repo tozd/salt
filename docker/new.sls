@@ -35,6 +35,25 @@ docker-service-file:
     - mode: 644
     - makedirs: true
 
+containerd-configuration-file:
+  file.managed:
+    - name: /etc/containerd/config.toml
+    - source: salt://docker/containerd.toml
+    - user: root
+    - group: root
+    - mode: 644
+    - makedirs: true
+
+containerd-service:
+  service.running:
+    - name: containerd
+    - enable: true
+    - require:
+      - file: /srv/containerd
+    - watch:
+      - file: containerd-configuration-file
+
+# Docker restarts whenever containerd does, because dockerd holds a connection to it which does not survive containerd being restarted underneath it.
 docker-service:
   service.running:
     - name: docker
@@ -44,10 +63,12 @@ docker-service:
       - file: /srv/tmp/docker
       - file: /srv/repositories
       - file: /srv/storage
+      - service: containerd-service
     - watch:
       - pkg: docker.io
       - file: docker-configuration-file
       - file: docker-service-file
+      - file: containerd-configuration-file
 
 include:
   - .files

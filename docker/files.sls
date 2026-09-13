@@ -5,6 +5,13 @@
     - mode: 700
     - makedirs: true
 
+/srv/containerd:
+  file.directory:
+    - user: root
+    - group: root
+    - mode: 700
+    - makedirs: true
+
 /srv/tmp/docker:
   file.directory:
     - user: root
