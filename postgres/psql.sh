@@ -15,7 +15,7 @@
 # Setting the host also decides which user this runs as. Salt falls back to running psql as the postgres user when no host is given, and that user is not in the
 # docker group. With a host it stays as the user the minion runs as, which is root. The option naming the container is the same one which keeps docker reachable.
 #
-# Only psql is stood in for, which is used by all Salt's postgres modules except for the postgres_initdb (which uses initdb).
+# Only psql is stood in for, which is used by all Salt's postgres modules except for postgres_initdb (which uses initdb).
 
 set -o pipefail
 
