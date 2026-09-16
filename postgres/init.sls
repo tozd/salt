@@ -23,6 +23,7 @@
     - user: root
     - group: root
     - mode: 755
+    - reload_modules: true
     - require:
       - file: {{ shim_dir }}
 
