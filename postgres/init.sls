@@ -1,5 +1,6 @@
 {% set shim_dir = '/usr/local/lib/salt-psql-shim' %}
 {% set configured_dir = salt['config.option']('postgres.bins_dir') %}
+{% set configured_user = salt['config.option']('postgres.user') %}
 {% set psql_on_path = salt['cmd.which']('psql') %}
 
 # Lets Salt's postgres states reach a PostgreSQL running in a container.
@@ -43,4 +44,15 @@ postgres-bins-dir-must-be-configured:
     - name: postgres.bins_dir is {{ configured_dir | default('unset', true) }}, not {{ shim_dir }}
     - comment: >
         Add "postgres.bins_dir: {{ shim_dir }}" under ssh_minion_opts in config/master.
+{% endif %}
+
+{% if not configured_user %}
+# The shim names no user to "docker exec", so psql runs as whoever the image runs as and asks for the role of that name. A container running as root then asks
+# for a role "root", and postgres.db_list answers that with an empty list rather than an error, which a state reads as "the database is not there".
+postgres-user-must-be-configured:
+  test.fail_without_changes:
+    - name: postgres.user is unset
+    - comment: >
+        Add "postgres.user: <role>" under ssh_minion_opts in config/master, naming the role the containers are reached as. It is the role which owns the
+        cluster, "postgres" unless the image was built otherwise.
 {% endif %}
