@@ -1,0 +1,22 @@
+{#
+  Waits for the PostgreSQL in a container to accept connections.
+
+  A docker_container.running state counts as done once Docker has started the container, while PostgreSQL inside still has to come up, so every state which
+  talks to it has to wait first. On a run which leaves the container alone the check passes right away and nothing is run.
+
+  It renders one cmd.run state named "<container>-ready", which the states talking to that container then require. The wait gives up after timeout seconds.
+#}
+{% macro ready(container, timeout=60) -%}
+{{ container }}-ready:
+  cmd.run:
+    - name: |
+        for _ in $(seq {{ timeout }}); do
+          docker exec {{ container }} pg_isready --quiet && exit 0
+          sleep 1
+        done
+        echo "{{ container }} is not accepting connections" >&2
+        exit 1
+    - unless: docker exec {{ container }} pg_isready --quiet
+    - require:
+      - docker_container: {{ container }}
+{%- endmacro %}
