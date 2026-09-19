@@ -227,15 +227,33 @@ interrupted halfway leaves the last complete set behind rather than a partial on
 
 ### Elasticsearch
 
-The same `.kopiaignore` template covers an Elasticsearch data directory, with `elasticsearch: true`, which
-additionally leaves out the snapshot repository the container writes into. There is no collection script for
-it, so without `lvm:` nothing of the index is kept and it has to be rebuilt from whatever is its source of
-truth, which is the usual arrangement for an index derived from another database.
+Only the `.kopiaignore` half is written here, because what the other half should do depends on whether the
+index can be rebuilt. Elasticsearch documents its snapshot API as the only supported method and gives no
+supported way to restore from a copy of a data directory, so the file-level copy is not something to rely
+on: a single node restored from an atomic filesystem snapshot behaves like one restarted after a power loss
+and in practice comes up, but that only ever makes a good day faster.
 
-Elasticsearch is the weaker of the two. Its snapshot API is documented as the only supported method and
-there is no supported way to restore from a copy of a data directory. A single node restored from an atomic
-filesystem snapshot behaves like one restarted after a power loss and in practice comes up, but reindexing
-stays the guarantee and the file-level copy only makes a good day faster.
+If the index is derived from another database and can be reindexed from it, which is the common case, then
+that reindexing is the restore path. Give the directory the template with `elasticsearch: true`, which
+leaves out a `snapshots` directory beside the data, and write no collection script. Without `lvm:` nothing of
+the index is then kept at all, and with it the data directory rides along in the filesystem snapshot as
+something which might save a rebuild but is not what the restore counts on.
+
+If it cannot be reindexed, the snapshot API has to produce the copy. Register a filesystem repository once,
+of type `fs`, with `path.repo` pointing at that same `snapshots` directory, so `/srv/storage/example-es/snapshots`
+for a container `example-es`, give the storage directory the template with `elasticsearch: false` so that
+`snapshots` is backed up rather than left out, and add a script above 50 in `/etc/backup.d` which takes a
+snapshot into it before kopia runs, along the lines of:
+
+```bash
+docker exec example-es curl --fail --silent --show-error --request PUT \
+  "localhost:9200/_snapshot/backup/$SNAPSHOT_NAME?wait_for_completion=true"
+```
+
+The data directory itself stays out of the backup without `lvm:`, exactly as before, because the repository
+is now what a restore reads. Kopia picks the repository up like any other directory and deduplicates it, so
+each run costs only the segments which are not in the backup already. Expiring old snapshots out of the
+repository is the script's job too, otherwise it only grows.
 
 ## Watching the destination fill
 
