@@ -1,18 +1,25 @@
-Currently we support Ubuntu Server 16.04 installed on the server.
+# Salt states
 
-Install `salt-ssh` using `virtualenv`:
+Reusable [Salt](https://docs.saltproject.io/en/latest/contents.html) states, used as a submodule by the
+repositories which deploy the actual servers.
+
+Currently we support Ubuntu Server 22.04 or newer installed on the server.
+
+Install `salt-ssh` using `venv`:
 
 ```bash
-# Create a Python 2 virtualenv, for example:
-$ virtualenv --python=python2.7 --no-site-packages salt-virtualenv
-$ source salt-virtualenv/bin/activate
+# Create Python3 venv.
+$ python3 -m venv ~/.venv/salt
+$ source ~/.venv/salt/bin/activate
 
-# Install salt and all dependencies:
-$ pip install -r requirements.txt
+# Install salt and all dependencies.
+$ pip3 install -r requirements.txt
 
-# Check version of salt-ssh
+# Check version of salt-ssh, a fork from salt-ssh 3007.9 (Chlorine).
 $ salt-ssh --version
-# salt-ssh 2017.7.2 (Nitrogen)
+salt-ssh 3007.9+10.g758e85ef2c (Chlorine)
 ```
 
-We are currently using an old version of Salt (2017.7.2) and Python 2.
+Some states have a README of their own:
+
+- [`backup`](./backup/README.md)
