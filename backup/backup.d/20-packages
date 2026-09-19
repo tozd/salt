@@ -1,0 +1,22 @@
+#!/bin/bash -e
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
+
+DATA_DIR=/srv/backup
+
+# The full state of every known package in the format "dpkg --set-selections" reads back.
+dpkg --get-selections '*' > "$DATA_DIR/packages-selections.list"
+
+# Only the packages somebody asked for and feeding it to "apt-get install" reconstructs the rest.
+apt-mark showmanual > "$DATA_DIR/packages-manual.list"
+
+# Held packages are pinned to a version on purpose.
+apt-mark showhold > "$DATA_DIR/packages-hold.list"
+
+# The answers given to package configuration prompts.
+debconf-get-selections > "$DATA_DIR/packages-debconf.list"
+
+# Which architectures dpkg accepts.
+dpkg --print-foreign-architectures > "$DATA_DIR/packages-architectures.list"

@@ -1,0 +1,15 @@
+#!/bin/bash -e
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
+
+DATA_DIR=/srv/backup
+
+# Docker is where most of the services live, so the list of containers and
+# images is what says which of them are supposed to exist after a restore.
+if command -v docker > /dev/null && docker info > /dev/null 2>&1; then
+  docker ps --all --no-trunc --format '{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' > "$DATA_DIR/system-docker-containers.list"
+  docker image ls --digests > "$DATA_DIR/system-docker-images.list"
+  docker volume ls > "$DATA_DIR/system-docker-volumes.list"
+fi

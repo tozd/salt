@@ -1,0 +1,42 @@
+#!/bin/bash -e
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
+
+DATA_DIR=/srv/backup
+
+# Block device tree with sizes, filesystem types and UUIDs.
+lsblk --output NAME,KNAME,PATH,SIZE,TYPE,FSTYPE,UUID,PARTUUID,LABEL,MOUNTPOINT > "$DATA_DIR/disks-lsblk.list"
+blkid > "$DATA_DIR/disks-blkid.list" || true
+
+# What is actually mounted right now, which is not the same as what /etc/fstab asks for.
+findmnt --all --output TARGET,SOURCE,FSTYPE,OPTIONS > "$DATA_DIR/disks-mounts.list"
+
+# The partition tables themselves, in the format "sfdisk" can restore from directly.
+: > "$DATA_DIR/disks-partitions.dump"
+for disk in $(lsblk --nodeps --noheadings --output PATH,TYPE | awk '$2 == "disk" { print $1 }'); do
+  echo "### $disk" >> "$DATA_DIR/disks-partitions.dump"
+  sfdisk --dump "$disk" >> "$DATA_DIR/disks-partitions.dump" 2> /dev/null || echo "# no partition table" >> "$DATA_DIR/disks-partitions.dump"
+done
+
+# Software RAID layout. The scan output is what /etc/mdadm/mdadm.conf is built from, and mdstat shows
+# the state the arrays were in, which tells a later restore whether an array was already degraded at
+# the time of the backup.
+if command -v mdadm > /dev/null; then
+  mdadm --detail --scan > "$DATA_DIR/disks-mdadm.list" 2> /dev/null || true
+  cat /proc/mdstat > "$DATA_DIR/disks-mdstat.list"
+fi
+
+# LVM layout. vgcfgbackup writes a full textual description of each volume group which vgcfgrestore reads
+# back, which is the only practical way to recreate logical volumes at their original sizes and in their
+# original order.
+if command -v vgs > /dev/null; then
+  pvs > "$DATA_DIR/disks-pvs.list" 2> /dev/null || true
+  vgs > "$DATA_DIR/disks-vgs.list" 2> /dev/null || true
+  lvs > "$DATA_DIR/disks-lvs.list" 2> /dev/null || true
+
+  # The default location under /etc/lvm/backup is already on the root filesystem, so this only makes sure it
+  # is current at the time of the snapshot.
+  vgcfgbackup > /dev/null 2>&1 || true
+fi

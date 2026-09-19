@@ -1,0 +1,32 @@
+#!/bin/bash -e
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
+
+DATA_DIR=/srv/backup
+
+# Distribution and kernel the backup was taken on.
+cat /etc/os-release > "$DATA_DIR/system-os-release.list"
+uname -a > "$DATA_DIR/system-uname.list"
+
+# Which units are enabled.
+systemctl list-unit-files --state=enabled --no-pager --no-legend > "$DATA_DIR/system-units-enabled.list"
+systemctl list-units --failed --no-pager --no-legend > "$DATA_DIR/system-units-failed.list"
+
+# Addresses and routes as they ended up.
+ip --oneline address show > "$DATA_DIR/system-addresses.list"
+ip --oneline route show > "$DATA_DIR/system-routes.list"
+ip --oneline -6 route show > "$DATA_DIR/system-routes6.list"
+
+# The packet filter as it actually was.
+iptables-save > "$DATA_DIR/system-iptables.list"
+ip6tables-save > "$DATA_DIR/system-ip6tables.list"
+
+# The hardware the machine ran on.
+dmidecode > "$DATA_DIR/system-dmidecode.list" 2> /dev/null || true
+lshw > "$DATA_DIR/system-lshw.list" 2> /dev/null || true
+lspci -nnk > "$DATA_DIR/system-lspci.list" 2> /dev/null || true
+
+# Whether the machine boots through UEFI, and with which boot entries.
+efibootmgr --verbose > "$DATA_DIR/system-efibootmgr.list" 2> /dev/null || true

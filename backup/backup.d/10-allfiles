@@ -1,0 +1,27 @@
+#!/bin/bash -e
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
+
+DATA_DIR=/srv/backup
+CONFIG_FILE=/etc/backup.conf
+
+if [ -e "$CONFIG_FILE" ]; then
+  . "$CONFIG_FILE"
+fi
+
+# The pseudo filesystems with additional exclusions.
+PRUNE=(/proc /sys /dev /run /mnt /media)
+
+# A repository reached through the filesystem would make the listing grow with the size of the backup history itself.
+if [ "$BACKUP_DESTINATION_TYPE" = filesystem ] && [ -n "$BACKUP_DESTINATION_PATH" ]; then
+  PRUNE+=("$BACKUP_DESTINATION_PATH")
+fi
+
+ARGS=()
+for path in "${PRUNE[@]}"; do
+  ARGS+=(-path "$path" -prune -or)
+done
+
+/usr/bin/find / "${ARGS[@]}" -ls 2> /dev/null > "$DATA_DIR/allfiles.list"
