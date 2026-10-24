@@ -139,7 +139,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                 'bind': '/etc/hosts',
                 'type': 'container',
                 'container': dh_container,
-                'readonly': true,
+                'readonly': True,
             }
 
     # Create the required configs
@@ -185,7 +185,7 @@ for container, cfg in pillar('docker:containers', {}).items():
     if cfg.get('image', '') in ['tozd/ubuntu-systemd', 'tozd/ubuntu-user']:
         cfg['volumes']['/srv/tmp/systemd-cgroup'] = {
             'bind': '/sys/fs/cgroup',
-            'readonly': true,
+            'readonly': True,
         }
         cfg['volumes']['/srv/tmp/%s/run' % container] = {
             'bind': '/run',
@@ -326,7 +326,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                 'destination': '%s/32' % port_bind['ip'],
                 dport_key: dport,
                 'proto': proto,
-                'save': true,
+                'save': True,
                 'require': Pkg('iptables'),
             }
         )
@@ -346,7 +346,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                     'destination': '%s/32' % port_bind['ip'],
                     dport_key: dport,
                     'proto': proto,
-                    'save': true,
+                    'save': True,
                     'require': Pkg('iptables'),
                 }
             )
@@ -365,7 +365,7 @@ for container, cfg in pillar('docker:containers', {}).items():
                     'destination': '%s/32' % port_bind['ip'],
                     dport_key: dport,
                     'proto': proto,
-                    'save': true,
+                    'save': True,
                     'require': Pkg('iptables'),
                 }
             )
@@ -447,6 +447,10 @@ for container, cfg in pillar('docker:containers', {}).items():
         properties['cap_add'] = capabilities_add
     if capabilities_drop:
         properties['cap_drop'] = capabilities_drop
+
+    security_opt = cfg.get('security_opt', [])
+    if security_opt:
+        properties['security_opt'] = security_opt
 
     # TODO: This should depend on the Docker version on the minion.
     #       If < 1.9 then it should be "always". But it seems there is no way to know the version so we use a proxy,
