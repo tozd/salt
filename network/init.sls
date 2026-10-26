@@ -11,6 +11,8 @@ hostname-init:
     - name: /etc/init.d/hostname.sh start
 {% elif grains['oscodename'] == 'trusty' %}
     - name: service hostname start
+{% else %}
+    - name: hostnamectl set-hostname {{ pillar['network']['system']['hostname'] }}
 {% endif %}
     - watch:
       - file: /etc/hostname
