@@ -1,7 +1,7 @@
 # Backup
 
 Hourly [kopia](https://kopia.io/) snapshots of the machine into an encrypted repository, together with the
-data which is not in the filesystem to begin with and has to be collected before the snapshot is taken.
+data which is not in the filesystem to begin with and has to be collected before the snapshot is created.
 
 The state needs `mailer:root_alias` in the pillar, which is what the cron jobs it installs mail their output
 to, so it is used together with the `mailer` state.
@@ -94,7 +94,7 @@ a snapshot of `/` would otherwise read back the repository it is being written i
 
 Some of what is worth keeping is not a file until something writes it out: the partition tables, the package
 selections, the database contents of a server which is not being snapshotted. The scripts in `/etc/backup.d`
-run before the snapshot is taken and write what they collect into `/srv/backup`, which is then picked up by
+run before the snapshot is created and write what they collect into `/srv/backup`, which is then picked up by
 the snapshot like anything else on the filesystem.
 
 The ones shipped here cover what any machine has, and are numbered up to 50:
@@ -109,8 +109,8 @@ The ones shipped here cover what any machine has, and are numbered up to 50:
 
 The directory is managed without `clean`, so other states can add scripts of their own for the data only they
 know how to collect. Such a state requires `file: /etc/backup.d` and numbers its script above 50 so that it
-runs after the ones above. `60-postgres.sh` here is one of these, ready to be instantiated per database, and
-is described under [Databases](#databases).
+runs after the ones above. `60-postgres.sh` and `60-mongodb.sh` here are two of these, ready to be
+instantiated per database, and are described under [Databases](#databases).
 
 Scripts are run in filename order by `run-parts`, and a failing one does not prevent the snapshot, because a
 backup missing one of the collected files is much better than no backup at all. The failure is reported
@@ -171,7 +171,8 @@ pillar, so that a machine is consistently in one mode or the other:
 
 Whether the left column is valid at all is for the database to say, and not every one says the same.
 PostgreSQL documents filesystem-snapshot backup as supported when the snapshot is atomic and includes the
-write-ahead log. A database which documents its own snapshot API as the only supported way (e.g.,
+write-ahead log, and MongoDB when journaling is enabled and the journal is on the same volume as the data
+files. A database which documents its own snapshot API as the only supported way (e.g.,
 Elasticsearch) gets no such guarantee from an atomic filesystem snapshot, whatever it does in practice,
 and the dump stays what is relied on.
 
@@ -206,10 +207,24 @@ per database:
 
 They expect a container named `example-pgsql` whose cluster is owned by the `postgres` role, with its data
 directory bind-mounted from `/srv/storage/example-pgsql/data`, like how the
-[tozd/docker/postgresql](https://gitlab.com/tozd/docker/postgresql) Docker image does it.
+https://gitlab.com/tozd/docker/postgresql Docker image does it. A container laid
+out differently is described in the context of the script, here for one from the official PostgreSQL image,
+which mounts the data directory at `/var/lib/postgresql/data`:
+
+```yaml
+    - context:
+        name: example
+        container: example_postgresdb
+        data_dir: /srv/storage/example/postgresdb/data
+        container_data_dir: /var/lib/postgresql/data
+```
+
+`data_dir` is the bind-mounted directory on the host and `container_data_dir` is where it is mounted inside the
+container. The `.kopiaignore` then goes into `/srv/storage/example/postgresdb`, the directory holding `data_dir`,
+whose last component therefore has to be `data`. The cluster is owned by the `postgres` role in either case.
 
 With `lvm:` configured the script only issues a `CHECKPOINT`, which flushes the dirty buffers and shortens
-the recovery of the copy taken a moment later, and the `.kopiaignore` leaves nothing out, so the data
+the recovery of the snapshot created a moment later, and the `.kopiaignore` leaves nothing out, so the data
 directory goes into the snapshot as it is.
 
 Without `lvm:` the `.kopiaignore` leaves `data` out and the script dumps instead, into
@@ -224,6 +239,57 @@ kopia compresses and deduplicates them far better than a compressed dump would a
 there and moved into `/srv/backup` as they finish. Both sit on the same filesystem, so that is a rename
 rather than a copy. The finished set replaces the previous one only once it is complete, so a run which is
 interrupted halfway leaves the last complete set behind rather than a partial one.
+
+### MongoDB
+
+Both halves are already written, for a MongoDB running in a container from the
+https://gitlab.com/tozd/docker/meteor-mongodb Docker image, and a state only instantiates them per database:
+
+```yaml
+/srv/storage/example-mongodb/.kopiaignore:
+  file.managed:
+    - source: salt://backup/kopiaignore.conf
+    - template: jinja
+    - context:
+        elasticsearch: false
+    - user: root
+    - group: root
+    - mode: 644
+
+/etc/backup.d/60-example-mongodb:
+  file.managed:
+    - source: salt://backup/60-mongodb.sh
+    - template: jinja
+    - context:
+        name: example
+    - user: root
+    - group: root
+    - mode: 755
+    - require:
+        - file: /etc/backup.d
+```
+
+They expect a container named `example-mongodb` with its data directory bind-mounted from
+`/srv/storage/example-mongodb/data`. A container named differently is given as `container` in the context of
+the script. The `.kopiaignore` always goes into the directory holding the bind-mounted data directory, whose
+last component therefore has to be `data`.
+
+The script authenticates as the `admin` user with the password from `MONGODB_ADMIN_PWD` in the container's
+`/etc/service/mongod/run.config`, and without authentication when that is empty. The user has to be able to
+list all databases, which on MongoDB 2.4 requires the `clusterAdmin` role.
+
+With `lvm:` configured the script only issues `fsync`, and the data directory goes into the snapshot as it is.
+MongoDB recovers such a copy through its journal when it is started on it.
+
+Without `lvm:` the `.kopiaignore` leaves `data` out and the script dumps instead, into
+`/srv/backup/example-mongodb`, with `mongodump --oplog`. All databases are dumped together, and `--oplog`
+also records the writes made while the dump runs, so that restoring it with `--oplogReplay` brings all of them
+to the same instant. That needs the server to be a replica set member, as the image runs it. The dump is
+written uncompressed, for the same reason as with PostgreSQL.
+
+`mongodump` runs inside the container, which has no volume to stage the dump in besides the data directory, so
+it is written into the container's own filesystem and copied out with `docker cp` once it is complete. As
+with PostgreSQL, the finished dump replaces the previous one only once it is complete.
 
 ### Elasticsearch
 
@@ -242,8 +308,8 @@ something which might save a rebuild but is not what the restore counts on.
 If it cannot be reindexed, the snapshot API has to produce the copy. Register a filesystem repository once,
 of type `fs`, with `path.repo` pointing at that same `snapshots` directory, so `/srv/storage/example-es/snapshots`
 for a container `example-es`, give the storage directory the template with `elasticsearch: false` so that
-`snapshots` is backed up rather than left out, and add a script above 50 in `/etc/backup.d` which takes a
-snapshot into it before kopia runs, along the lines of:
+`snapshots` is backed up rather than left out, and add a script above 50 in `/etc/backup.d` which creates a
+snapshot in it before kopia runs, along the lines of:
 
 ```bash
 docker exec example-es curl --fail --silent --show-error --request PUT \
@@ -293,19 +359,19 @@ $ screen
 $ backup
 ```
 
-Only one run happens at a time, and one which finds the lock taken exits quietly rather than mailing, since
+Only one run happens at a time, and one which finds the lock held exits quietly rather than mailing, since
 colliding with a long snapshot or with the weekly verification is ordinary at hourly cadence.
 
 ## Changing the destination later
 
-Changing anything about the destination does not take effect on its own, because the job connects only when
+Changing anything about the destination is not applied on its own, because the job connects only when
 it is not connected already and kopia stores the connection details in `/var/lib/kopia/repository.config`.
 Run `kopia repository disconnect` on the machine after such a change, and the next run reconnects with
 the new settings.
 
 ## Getting data back
 
-The repository is not browsable: it is encrypted, packed blobs with hashed names, and it takes kopia plus the password to read anything out of it.
+The repository is not browsable: it is encrypted, packed blobs with hashed names, and it requires kopia plus the password to read anything out of it.
 
 ```bash
 $ kopia snapshot list                    # with retention reasons
@@ -326,4 +392,11 @@ Load the globals first, then each database:
 ```bash
 $ psql --username=postgres -f globals.sql
 $ createdb --username=postgres <db> && pg_restore --username=postgres --dbname=<db> <db>/
+```
+
+`/srv/backup/example-mongodb/` holds one directory per database and `oplog.bson`. Restore all of them at once
+into an empty server, so that the recorded writes are replayed on top:
+
+```bash
+$ mongorestore --username=admin --authenticationDatabase=admin --oplogReplay <dir>
 ```
