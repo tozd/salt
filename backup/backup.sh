@@ -30,10 +30,15 @@ SFTP_KEY_FILE=/etc/kopia/sftp_key
 SFTP_KNOWN_HOSTS_FILE=/etc/kopia/sftp_known_hosts
 SNAPSHOT_LV_SUFFIX=-backup-snapshot
 
+# EPOCHREALTIME is available since bash 5.0. Older bash leaves it empty, and then date provides the time instead.
 now_ms() {
-  local T=${EPOCHREALTIME//[.,]/}
+  if [ -n "${EPOCHREALTIME:-}" ]; then
+    local T=${EPOCHREALTIME//[.,]/}
 
-  echo $((T / 1000))
+    echo $((T / 1000))
+  else
+    date +%s%3N
+  fi
 }
 
 fmt_ms() {

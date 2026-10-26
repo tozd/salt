@@ -6,8 +6,9 @@
 
 DATA_DIR=/srv/backup
 
-# Block device tree with sizes, filesystem types and UUIDs.
-lsblk --output NAME,KNAME,PATH,SIZE,TYPE,FSTYPE,UUID,PARTUUID,LABEL,MOUNTPOINT > "$DATA_DIR/disks-lsblk.list"
+# Block device tree with sizes, filesystem types and UUIDs. With --paths the names are full device paths, which works also with versions of lsblk older
+# than its PATH column (e.g., on Ubuntu 16.04).
+lsblk --paths --output NAME,KNAME,SIZE,TYPE,FSTYPE,UUID,PARTUUID,LABEL,MOUNTPOINT > "$DATA_DIR/disks-lsblk.list"
 blkid > "$DATA_DIR/disks-blkid.list" || true
 
 # What is actually mounted right now, which is not the same as what /etc/fstab asks for.
@@ -15,7 +16,7 @@ findmnt --all --output TARGET,SOURCE,FSTYPE,OPTIONS > "$DATA_DIR/disks-mounts.li
 
 # The partition tables themselves, in the format "sfdisk" can restore from directly.
 : > "$DATA_DIR/disks-partitions.dump"
-for disk in $(lsblk --nodeps --noheadings --output PATH,TYPE | awk '$2 == "disk" { print $1 }'); do
+for disk in $(lsblk --nodeps --noheadings --paths --output NAME,TYPE | awk '$2 == "disk" { print $1 }'); do
   echo "### $disk" >> "$DATA_DIR/disks-partitions.dump"
   sfdisk --dump "$disk" >> "$DATA_DIR/disks-partitions.dump" 2> /dev/null || echo "# no partition table" >> "$DATA_DIR/disks-partitions.dump"
 done

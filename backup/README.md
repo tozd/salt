@@ -113,8 +113,8 @@ out.
 
 The directory is managed without `clean`, so other states can add scripts of their own for the data only they
 know how to collect. Such a state requires `file: /etc/backup.d` and numbers its script above 50 so that it
-runs after the ones above. `60-postgres.sh` and `60-mongodb.sh` here are two of these, ready to be
-instantiated per database, and are described under [Databases](#databases).
+runs after the ones above. `60-postgres.sh`, `60-mysql.sh` and `60-mongodb.sh` here are three of these,
+ready to be instantiated per database, and are described under [Databases](#databases).
 
 Scripts are run in filename order by `run-parts`, and a failing one does not prevent the snapshot, because a
 backup missing one of the collected files is much better than no backup at all. The failure is reported
@@ -176,7 +176,7 @@ pillar, so that a machine is consistently in one mode or the other:
 Whether the left column is valid at all is for the database to say, and not every one says the same.
 PostgreSQL documents filesystem-snapshot backup as supported when the snapshot is atomic and includes the
 write-ahead log, and MongoDB when journaling is enabled and the journal is on the same volume as the data
-files. A database which documents its own snapshot API as the only supported way (e.g.,
+files. MySQL documents it only with a global read lock held, see [MySQL](#mysql). A database which documents its own snapshot API as the only supported way (e.g.,
 Elasticsearch) has no such guarantee from an atomic filesystem snapshot, whatever it does in practice,
 and the dump stays what is relied on.
 
@@ -243,6 +243,61 @@ kopia compresses and deduplicates them far better than a compressed dump would a
 there and moved into `/srv/backup` as they finish. Both sit on the same filesystem, so that is a rename
 rather than a copy. The finished set replaces the previous one only once it is complete, so a run which is
 interrupted halfway leaves the last complete set behind rather than a partial one.
+
+### MySQL
+
+Both halves are already written, for a MySQL (MariaDB) running in a container from the
+https://gitlab.com/tozd/docker/mysql Docker image, and a state only instantiates them per database server:
+
+```yaml
+/srv/storage/example-mysql/.kopiaignore:
+  file.managed:
+    - source: salt://backup/kopiaignore.conf
+    - template: jinja
+    - context:
+        elasticsearch: false
+    - user: root
+    - group: root
+    - mode: 644
+
+/etc/backup.d/60-example-mysql:
+  file.managed:
+    - source: salt://backup/60-mysql.sh
+    - template: jinja
+    - context:
+        name: example
+    - user: root
+    - group: root
+    - mode: 755
+    - require:
+        - file: /etc/backup.d
+```
+
+They expect a container named `example-mysql` with its data directory bind-mounted from
+`/srv/storage/example-mysql/data`. A container named differently is given as `container` in the context of
+the script. The script reads the credentials of an administrative user from `/etc/mysql/debian.cnf` inside the
+container, which the Debian packaging of MariaDB maintains, so no password appears on any command line.
+
+With `lvm:` configured the script only issues `FLUSH TABLES`, which writes out and closes all tables, and the
+data directory goes into the snapshot as it is. MySQL documents a snapshot as a backup only when it is created
+while `FLUSH TABLES WITH READ LOCK` is held, which the script cannot hold across the snapshot created after it.
+InnoDB tables recover from the copy like after a power loss. MyISAM tables written between the flush and the
+snapshot can be left inconsistent in it, and need a repair when MariaDB is started on the copy, which the image
+performs on its own through `myisam_recover_options`.
+
+Without `lvm:` the `.kopiaignore` leaves `data` out and the script dumps instead, into
+`/srv/backup/example-mysql`, one `mysqldump` per database, all of them except `information_schema`,
+`performance_schema` and `sys`. A database whose tables are all InnoDB is dumped with `--single-transaction`,
+which sees one consistent state without blocking anybody. Other engines do not support transactions, so a
+database with any table of them is dumped with `--lock-tables` instead, which keeps the dump consistent but
+makes writes to that database wait until it is done. The `mysql` database with the accounts is always one of
+these, but it is small. Databases are dumped one after another, so they are individually consistent but not
+consistent with each other.
+
+The dumps are written uncompressed and without the dump date, so an unchanged database produces an identical
+dump, which kopia stores only once. `mysqldump` writes to its standard output, which the script redirects into
+`/srv/backup` directly, so nothing is staged inside the container. As with PostgreSQL, the finished set
+replaces the previous one only once it is complete.
 
 ### MongoDB
 
@@ -403,6 +458,15 @@ Load the globals first, then each database:
 $ psql --username=postgres -f globals.sql
 $ createdb --username=postgres <db> && pg_restore --username=postgres --dbname=<db> <db>/
 ```
+
+`/srv/backup/example-mysql/` holds one file per database, each of which recreates its database:
+
+```bash
+$ mysql --defaults-file=/etc/mysql/debian.cnf < <db>.sql
+```
+
+`mysql.sql` holds the accounts, and restores only into the same MariaDB version. The tables holding the
+accounts changed in MariaDB 10.4, so between versions the accounts are recreated from `SHOW GRANTS` instead.
 
 `/srv/backup/example-mongodb/` holds one directory per database and `oplog.bson`. Restore all of them at once
 into an empty server, so that the recorded writes are replayed on top:
