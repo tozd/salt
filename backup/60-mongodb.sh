@@ -19,24 +19,32 @@
 
 CONTAINER={{ mongodb_container }}
 
-# Runs a MongoDB tool inside the container, authenticated as the admin user. run.config is written for bash and not for a POSIX shell. Older versions of the
-# tools accept the password only on the command line.
-mongodb_tool() {
-  docker exec "$CONTAINER" bash -c '
-    . /etc/service/mongod/run.config
-    TOOL=$1
-    shift
-    if [ -n "$MONGODB_ADMIN_PWD" ]; then
-      exec "$TOOL" --username admin --password "$MONGODB_ADMIN_PWD" --authenticationDatabase admin "$@"
-    else
-      exec "$TOOL" "$@"
-    fi
-  ' bash "$@"
-}
+# Commands run inside the container, where run.config holds the password of the admin user. run.config is written for bash and not for a POSIX shell. MongoDB
+# tools receive the password on their standard input, never on their command line, which every process on the host can read. They report their progress even
+# when everything goes well, so their output is shown only when they fail.
 {%- if backup_lvm %}
 
 # The backup copies the database files themselves out of a filesystem snapshot, from which MongoDB recovers through its journal.
-mongodb_tool mongo --quiet admin --eval 'var r = db.adminCommand({fsync: 1}); if (!r.ok) { printjson(r); quit(1); }'
+#
+# The shell is "mongo", or "mongosh" in versions which do not ship "mongo" anymore. Their options for the password differ, but both run a script given on
+# standard input and both have db.auth. The script is a single line because "mongo" evaluates its input line by line.
+if ! OUTPUT=$(docker exec "$CONTAINER" bash -c '
+  . /etc/service/mongod/run.config
+  if [ -x "$(command -v mongo)" ]; then
+    MONGO=mongo
+  else
+    MONGO=mongosh
+  fi
+  AUTH=
+  if [ -n "$MONGODB_ADMIN_PWD" ]; then
+    printf -v AUTH "db.getSiblingDB(\"admin\").auth(\"admin\", \"%s\"); " "$MONGODB_ADMIN_PWD"
+  fi
+  FSYNC="var r = db.adminCommand({fsync: 1}); if (!r.ok) { printjson(r); quit(1); }"
+  printf "%s\n" "try { ${AUTH}${FSYNC} } catch (e) { print(e); quit(1); }" | "$MONGO" --quiet admin
+' 2>&1); then
+  echo "$OUTPUT" >&2
+  exit 1
+fi
 {%- else %}
 
 OUT_DIR=/srv/backup/{{ name }}-mongodb
@@ -51,8 +59,19 @@ rm --recursive --force "$TMP_DIR"
 docker exec "$CONTAINER" rm --recursive --force "$STAGE"
 
 # With --oplog the dump also records the writes made while it runs, so that restoring it with --oplogReplay brings all databases to the same instant.
-# The tools report their progress even when everything goes well, so their output is shown only when they fail.
-if ! OUTPUT=$(mongodb_tool mongodump --oplog --out "$STAGE" 2>&1); then
+#
+# mongodump reads the password from standard input when it asks for one. The Go rewrite of the tools (MongoDB 3.0 onwards) asks when --password is left out,
+# while the older C++ one asks only when --password is given without a value.
+if ! OUTPUT=$(docker exec "$CONTAINER" bash -c '
+  . /etc/service/mongod/run.config
+  if [ -z "$MONGODB_ADMIN_PWD" ]; then
+    exec mongodump "$@"
+  elif mongodump --version 2>&1 | grep --quiet "^Go version"; then
+    printf "%s\n" "$MONGODB_ADMIN_PWD" | mongodump --username admin --authenticationDatabase admin "$@"
+  else
+    printf "%s\n" "$MONGODB_ADMIN_PWD" | mongodump --username admin --password --authenticationDatabase admin "$@"
+  fi
+' bash --oplog --out "$STAGE" 2>&1); then
   echo "$OUTPUT" >&2
   exit 1
 fi

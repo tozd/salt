@@ -18,7 +18,7 @@ backup:
     ...
     -----END PGP MESSAGE-----
 
-  # What gets snapshotted. What gets left out of is configured through .kopiaignore files.
+  # What is snapshotted. What is left out of it is configured through .kopiaignore files.
   source: /
 
   # Optional. The volume holding the data being backed up. With this set kopia reads from a snapshot of that
@@ -48,7 +48,7 @@ backup:
   # How many errors the verification collects before giving up.
   verify_max_errors: 100
 
-  # How full the destination is allowed to get before the weekly verification complains. Checked after
+  # How full the destination is allowed to become before the weekly verification complains. Checked after
   # maintenance, so what it sees is the space left once the expired snapshots have been reclaimed.
   destination_full_percent: 95
 ```
@@ -138,7 +138,7 @@ database restored from these files recovers exactly the way it would after a pow
 The global policy tolerates read errors, because on a live filesystem a file which changes or disappears
 while it is being read is normal, and one such file must not throw away the whole snapshot. That reasoning
 does not hold for what is read out of the snapshot: nothing there can change while it is being read, so
-an error is a real one, most likely a failing disk. The snapshot-backed mountpoint therefore gets a policy
+an error is a real one, most likely a failing disk. The snapshot-backed mountpoint therefore has a policy
 of its own where errors are fatal.
 
 Kopia still writes the snapshot when it hits one of these, so whatever could be read is kept rather than
@@ -173,7 +173,7 @@ Whether the left column is valid at all is for the database to say, and not ever
 PostgreSQL documents filesystem-snapshot backup as supported when the snapshot is atomic and includes the
 write-ahead log, and MongoDB when journaling is enabled and the journal is on the same volume as the data
 files. A database which documents its own snapshot API as the only supported way (e.g.,
-Elasticsearch) gets no such guarantee from an atomic filesystem snapshot, whatever it does in practice,
+Elasticsearch) has no such guarantee from an atomic filesystem snapshot, whatever it does in practice,
 and the dump stays what is relied on.
 
 ### PostgreSQL
@@ -279,12 +279,13 @@ The script authenticates as the `admin` user with the password from `MONGODB_ADM
 list all databases, which on MongoDB 2.4 requires the `clusterAdmin` role.
 
 With `lvm:` configured the script only issues `fsync`, which flushes the data files and shortens the recovery
-of the snapshot created a moment later, and the data directory goes into the snapshot as it is. MongoDB
-documents such a snapshot as a valid backup when journaling is enabled and the journal is on the same volume
-as the data files, which holds for the image, where the journal is inside the data directory. Started on the
-copy, MongoDB recovers it through its journal, like after a power loss. As after a power loss, writes which
-were acknowledged but not yet written to the journal are missing from it, which with the default write concern
-can be the last fraction of a second.
+of the snapshot created a moment later, and the data directory goes into the snapshot as it is. It issues it
+through `mongo`, or through `mongosh` in versions which do not ship `mongo` anymore. MongoDB documents such a
+snapshot as a valid backup when journaling is enabled and the journal is on the same volume as the data files,
+which holds for the image, where the journal is inside the data directory. Started on the copy, MongoDB
+recovers it through its journal, like after a power loss. As after a power loss, writes which were
+acknowledged but not yet written to the journal are missing from it, which with the default write concern can
+be the last fraction of a second.
 
 Without `lvm:` the `.kopiaignore` leaves `data` out and the script dumps instead, into
 `/srv/backup/example-mongodb`, with `mongodump --oplog`. All databases are dumped together, and `--oplog`
@@ -374,7 +375,7 @@ it is not connected already and kopia stores the connection details in `/var/lib
 Run `kopia repository disconnect` on the machine after such a change, and the next run reconnects with
 the new settings.
 
-## Getting data back
+## Restoring data
 
 The repository is not browsable: it is encrypted, packed blobs with hashed names, and it requires kopia plus the password to read anything out of it.
 

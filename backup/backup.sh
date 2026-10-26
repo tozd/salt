@@ -435,7 +435,7 @@ case "$MODE" in
       "--max-errors=$BACKUP_VERIFY_MAX_ERRORS"
 
     # Kopia runs maintenance on its own after every snapshot, but only on the machine recorded as the maintenance owner, and it stays silent when this machine
-    # is not the owner. Running it explicitly makes a wrong owner visible as an error instead of as space which never gets reclaimed.
+    # is not the owner. Running it explicitly makes a wrong owner visible as an error instead of as space which is never reclaimed.
     #
     # It runs after the verification and not before it on purpose. Full maintenance deletes blobs which no snapshot refers to any more, and that is the last
     # thing which should happen to a repository that has just been reported as damaged.
