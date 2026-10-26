@@ -101,11 +101,15 @@ The ones shipped here cover what any machine has, and are numbered up to 50:
 
 | Script        | What it writes out                                                         |
 | ------------- | -------------------------------------------------------------------------- |
-| `10-allfiles` | a listing of every file, so that a restore can be compared against it      |
+| `10-allfiles` | a listing of every file, including the ones the snapshot excludes          |
 | `20-packages` | package selections, manual and held packages, debconf answers              |
 | `30-disks`    | partition tables, RAID and LVM layout, what was mounted                    |
 | `40-system`   | distribution, kernel, enabled units, addresses, routes, firewall, hardware |
 | `50-docker`   | the containers, images and volumes which are supposed to exist             |
+
+The listing of every file is the only exact record of what is on the machine, so it deliberately includes what
+the snapshot excludes. It is what a restore is compared against, and what shows which files an exclusion left
+out.
 
 The directory is managed without `clean`, so other states can add scripts of their own for the data only they
 know how to collect. Such a state requires `file: /etc/backup.d` and numbers its script above 50 so that it

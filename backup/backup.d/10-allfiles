@@ -24,4 +24,6 @@ for path in "${PRUNE[@]}"; do
   ARGS+=(-path "$path" -prune -or)
 done
 
+# Every file is listed, also the ones the snapshot excludes, because this listing is the only exact record of what is on the machine. It is what a restore is
+# compared against and what shows which files an exclusion left out.
 /usr/bin/find / "${ARGS[@]}" -ls 2> /dev/null > "$DATA_DIR/allfiles.list"
