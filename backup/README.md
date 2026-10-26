@@ -278,8 +278,13 @@ The script authenticates as the `admin` user with the password from `MONGODB_ADM
 `/etc/service/mongod/run.config`, and without authentication when that is empty. The user has to be able to
 list all databases, which on MongoDB 2.4 requires the `clusterAdmin` role.
 
-With `lvm:` configured the script only issues `fsync`, and the data directory goes into the snapshot as it is.
-MongoDB recovers such a copy through its journal when it is started on it.
+With `lvm:` configured the script only issues `fsync`, which flushes the data files and shortens the recovery
+of the snapshot created a moment later, and the data directory goes into the snapshot as it is. MongoDB
+documents such a snapshot as a valid backup when journaling is enabled and the journal is on the same volume
+as the data files, which holds for the image, where the journal is inside the data directory. Started on the
+copy, MongoDB recovers it through its journal, like after a power loss. As after a power loss, writes which
+were acknowledged but not yet written to the journal are missing from it, which with the default write concern
+can be the last fraction of a second.
 
 Without `lvm:` the `.kopiaignore` leaves `data` out and the script dumps instead, into
 `/srv/backup/example-mongodb`, with `mongodump --oplog`. All databases are dumped together, and `--oplog`
