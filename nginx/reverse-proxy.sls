@@ -1,10 +1,10 @@
 single-host-reverse-proxy-image:
-  docker.pulled:
-    - name: tozd/nginx-proxy
-    - tag: latest
+  docker_image.present:
+    - name: registry.gitlab.com/tozd/docker/nginx-proxy
+    - tag: ubuntu-resolute
     - force: true
     - require:
-      - sls: docker.base
+      - service: docker-service
 
 /srv/nginx/log:
   file.directory:
@@ -49,46 +49,39 @@ single-host-reverse-proxy-image:
     - makedirs: true
 
 single-host-reverse-proxy-container:
-  docker.running:
+  docker_container.running:
     - name: single-host-reverse-proxy
     - hostname: single-host-reverse-proxy
-    - image: tozd/nginx-proxy
+    - image: registry.gitlab.com/tozd/docker/nginx-proxy:ubuntu-resolute
     - environment:
-        MAILTO: '{{ pillar['mailer']['root_alias']|join(',') }}'
-        REMOTES: {{ pillar['mailer']['relay'] }}
-        LETSENCRYPT_EMAIL: {{ salt['pillar.get']('nginx:lets_encrypt_email', '') }}
-    - ports:
+      - MAILTO: "{{ pillar['mailer']['root_alias'] | join(',') }}"
+      - REMOTES: "{{ pillar['mailer']['relay'] }}"
+      - LETSENCRYPT_EMAIL: "{{ salt['pillar.get']('nginx:lets_encrypt_email', '') }}"
+    - restart_policy: always
+    - binds:
+      - /srv/nginx/log:/var/log/nginx
+      - /srv/nginx/dockergen:/var/log/dockergen
+      - /srv/nginx/letsencrypt:/var/log/letsencrypt
+      - /srv/nginx/dnsmasq:/var/log/dnsmasq
+      - /srv/nginx/ssl:/ssl
+      - /srv/nginx/sites:/etc/nginx/sites-volume
+      - /var/run/docker.sock:/var/run/docker.sock
+    - skip_translate: port_bindings
+    - port_bindings:
         80/tcp:
-          HostIp: {{ pillar['network']['address'] }}
+        - HostIp: "{{ pillar['network']['address'] }}"
           HostPort: 80
         443/tcp:
-          HostIp: {{ pillar['network']['address'] }}
+        - HostIp: "{{ pillar['network']['address'] }}"
           HostPort: 443
-    - volumes:
-        /srv/nginx/log:
-          bind: /var/log/nginx
-        /srv/nginx/dockergen:
-          bind: /var/log/dockergen
-        /srv/nginx/letsencrypt:
-          bind: /var/log/letsencrypt
-        /srv/nginx/dnsmasq:
-          bind: /var/log/dnsmasq
-        /srv/nginx/ssl:
-          bind: /ssl
-        /srv/nginx/sites:
-          bind: /etc/nginx/sites-volume
-        /var/run/docker.sock:
-          bind: /var/run/docker.sock
-    - restart_policy:
-        Name: always
     - require:
+      - docker_image: single-host-reverse-proxy-image
       - file: /srv/nginx/log
       - file: /srv/nginx/dockergen
       - file: /srv/nginx/letsencrypt
       - file: /srv/nginx/dnsmasq
       - file: /srv/nginx/ssl
       - file: /srv/nginx/sites
-      - docker: single-host-reverse-proxy-image
 
 iptables-single-host-reverse-proxy-policy:
   iptables.append:
