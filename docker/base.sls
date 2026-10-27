@@ -128,3 +128,4 @@ docker-available:
 
 include:
   - .files
+  - .prune

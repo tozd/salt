@@ -94,3 +94,4 @@ docker-service:
 
 include:
   - .files
+  - .prune
