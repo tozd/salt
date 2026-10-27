@@ -1,4 +1,8 @@
 #!/bin/bash
+# ------------------------------------------------------------------------
+# THIS FILE HAS BEEN AUTOMATICALLY GENERATED VIA SALT-BASED CONFIGURATION.
+# ANY MANUAL CHANGES WILL BE OVERWRITTEN!
+# ------------------------------------------------------------------------
 
 export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:$PATH"
 
