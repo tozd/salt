@@ -6,17 +6,25 @@
 
 DATA_DIR=/srv/backup
 
+# Major device numbers of devices which are not read. Floppy drives (major 2) are left out because a virtual machine can have an emulated drive with no disk in
+# it, and every read of it fails and logs a kernel I/O error. Listing majors to exclude replaces lsblk's default exclusion of RAM disks (major 1), so they are
+# listed as well.
+EXCLUDED_MAJORS=1,2
+
 # Block device tree with sizes, filesystem types and UUIDs. With --paths the names are full device paths, which works also with versions of lsblk older
 # than its PATH column (e.g., on Ubuntu 16.04).
 lsblk --paths --output NAME,KNAME,SIZE,TYPE,FSTYPE,UUID,PARTUUID,LABEL,MOUNTPOINT > "$DATA_DIR/disks-lsblk.list"
-blkid > "$DATA_DIR/disks-blkid.list" || true
+
+# Without arguments blkid probes every block device, so it is given the devices to probe. Before util-linux 2.34, lsblk lists a device with several parents
+# (e.g., a RAID array) once for each of them, hence sort.
+blkid $(lsblk --list --noheadings --paths --exclude "$EXCLUDED_MAJORS" --output NAME | sort --unique) > "$DATA_DIR/disks-blkid.list" || true
 
 # What is actually mounted right now, which is not the same as what /etc/fstab asks for.
 findmnt --all --output TARGET,SOURCE,FSTYPE,OPTIONS > "$DATA_DIR/disks-mounts.list"
 
 # The partition tables themselves, in the format "sfdisk" can restore from directly.
 : > "$DATA_DIR/disks-partitions.dump"
-for disk in $(lsblk --nodeps --noheadings --paths --output NAME,TYPE | awk '$2 == "disk" { print $1 }'); do
+for disk in $(lsblk --nodeps --noheadings --paths --exclude "$EXCLUDED_MAJORS" --output NAME,TYPE | awk '$2 == "disk" { print $1 }'); do
   echo "### $disk" >> "$DATA_DIR/disks-partitions.dump"
   sfdisk --dump "$disk" >> "$DATA_DIR/disks-partitions.dump" 2> /dev/null || echo "# no partition table" >> "$DATA_DIR/disks-partitions.dump"
 done
